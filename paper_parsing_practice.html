@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MACRec PDF Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        .content span {
+            transition: color 0.3s, background-color 0.3s;
+        }
+        .content span:hover {
+            color: white;
+            background-color: #007BFF;
+            border-radius: 4px;
+            padding: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>MACRec: A Multi-Agent Collaboration Framework for Recommendation</h1>
+    <div class="content" id="content">
+        <h2>ABSTRACT</h2>
+        <p>
+            LLM-based agents have gained considerable attention for their decision-making skills and ability to handle complex tasks. Recognizing the current gap in leveraging agent capabilities for multi-agent collaboration in recommendation systems, we introduce MACRec, a novel framework designed to enhance recommendation systems through multi-agent collaboration.
+        </p>
+        <h2>1 INTRODUCTION</h2>
+        <p>
+            In our framework, recommendation tasks are addressed through the collaborative efforts of various specialized agents, including Manager, User/Item Analyst, Reflector, Searcher, and Task Interpreter, with different working flows. Furthermore, we provide application examples of how developers can easily use MACRec on various recommendation tasks, including rating prediction, sequential recommendation, conversational recommendation, and explanation generation of recommendation results.
+        </p>
+        <p>
+            The framework and demonstration video are publicly available at <a href="https://github.com/wzf2000/MACRec" target="_blank">MACRec GitHub Repository</a>.
+        </p>
+    </div>
+    <script>
+        // Wrap every word in a span, skipping HTML tags
+        const contentDiv = document.getElementById('content');
+        const wrapTextNodes = (node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                const words = node.textContent.split(/(\s+)/);
+                const fragment = document.createDocumentFragment();
+                words.forEach(word => {
+                    if (word.trim()) {
+                        const span = document.createElement('span');
+                        span.textContent = word;
+                        fragment.appendChild(span);
+                    } else {
+                        fragment.appendChild(document.createTextNode(word));
+                    }
+                });
+                node.replaceWith(fragment);
+            } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SCRIPT') {
+                Array.from(node.childNodes).forEach(child => wrapTextNodes(child));
+            }
+        };
+        wrapTextNodes(contentDiv);
+    </script>
+</body>
+</html>
