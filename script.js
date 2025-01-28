@@ -108,6 +108,17 @@ function createGraph() {
     .attr("text-anchor", "middle")
     .attr("dy", d => d.size / 10);
 
+  // 논문 제목 추가
+  nodeGroup.append("text")
+    .text(d => d.id) // 논문 제목 표시
+    .attr("fill", "gray")
+    // .attr("font-size", d => Math.max(8, d.size / 5)) // 크기를 원 크기에 비례하게 설정
+    // .attr("text-anchor", "middle")
+    .attr("dx", d => d.size / 2)
+    .attr("dy", d => d.size / 10) // 제목을 인용 수 아래에 배치
+    .attr("class", "title-label")
+  // .call(wrapText, 100); // 긴 제목을 자동 줄바꿈 (아래에 wrapText 함수 추가됨)
+
   simulation
     .nodes(nodes)
     .on("tick", () => {
@@ -129,6 +140,10 @@ function dragstarted(event) {
   }
   event.subject.fx = event.subject.x;
   event.subject.fy = event.subject.y
+
+  // ⬇⬇⬇ 드래그 발생 시 연도 라벨 제거 ⬇⬇⬇
+  svg.select(".year-labels").remove();
+
 }
 
 function dragged(event) {
@@ -145,15 +160,59 @@ function dragended() {
   event.subject.fy = null
 }
 
-function sortByValue() {
-  nodes.sort((a, b) => b.citationCount - a.citationCount);
-
-  nodes.forEach((node, i) => {
-    node.fx = (width / (nodes.length + 1)) * (i + 1);
-    node.fy = height / 2;
+function sortByYearAndCitation() {
+  // 1️⃣ 연도별로 그룹화
+  const yearGroups = {};
+  nodes.forEach(node => {
+    if (!yearGroups[node.year]) {
+      yearGroups[node.year] = [];
+    }
+    yearGroups[node.year].push(node);
   });
 
+  // 2️⃣ 각 연도 그룹을 인용 수 기준으로 정렬
+  Object.keys(yearGroups).forEach(year => {
+    yearGroups[year].sort((a, b) => b.citationCount - a.citationCount);
+  });
+
+  // 3️⃣ 화면 너비를 연도 개수로 나누어 x 위치 결정
+  const uniqueYears = Object.keys(yearGroups).sort((a, b) => a - b); // 연도 오름차순 정렬
+  const yearSpacing = width / (uniqueYears.length + 1); // 연도별 x 간격
+  const verticalSpacing = 80; // 같은 연도 내 세로 간격
+
+  uniqueYears.forEach((year, yearIndex) => {
+    const yearNodes = yearGroups[year];
+    const centerX = yearSpacing * (yearIndex + 1); // 해당 연도의 X 위치
+
+    yearNodes.forEach((node, nodeIndex) => {
+      node.fx = centerX;
+      node.fy = height / 2 + nodeIndex * verticalSpacing - (yearNodes.length * verticalSpacing) / 2;
+    });
+  });
+
+  // 4️⃣ Force Simulation 다시 실행
   simulation.alpha(1).restart();
+
+  // 5️⃣ 연도를 화면 하단에 추가 (버튼을 눌렀을 때만 보이게)
+  svg.select(".year-labels").remove(); // 기존 연도 라벨 삭제
+
+  svg.append("g")
+    .attr("class", "year-labels")
+    .selectAll("text")
+    .data(uniqueYears)
+    .enter()
+    .append("text")
+    .text(d => d) // 연도 표시
+    .attr("x", (d, i) => yearSpacing * (i + 1))
+    .attr("y", height - 20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "16px")
+    .attr("fill", "black")
+    .style("opacity", 0) // 처음에는 숨김
+    .transition().duration(500) // 애니메이션 효과
+    .style("opacity", 1);
 }
+
+
 
 createGraph();
