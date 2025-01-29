@@ -168,6 +168,7 @@ function sortByYearAndCitation() {
       yearGroups[node.year] = [];
     }
     yearGroups[node.year].push(node);
+    console.log(yearGroups)
   });
 
   // 2️⃣ 각 연도 그룹을 인용 수 기준으로 정렬

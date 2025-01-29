@@ -1,0 +1,1 @@
+CONFERENCE_PAPER_PARSING_PROMPT = """Based on the information from the given website, return it in the provided format. Do not say anything else."""
