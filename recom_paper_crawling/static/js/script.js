@@ -1,24 +1,62 @@
-const data = {
-  mainPaper: {
-    title: "MACRec: A Multi-Agent Collaboration Framework for Recommendation",
-    citationCount: 4,
-    year: 2024
-  },
-  citedPapers: [
-    { title: "[1] Language models are few-shot learners", citationCount: 38863, year: 2020 },
-    { title: "[3] Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents", citationCount: 155, year: 2023 },
-    { title: "[4] Improving Factuality and Reasoning in Language Models through Multiagent Debate", citationCount: 437, year: 2023 },
-    { title: "[6] Camel: Communicative agents for 'mind' exploration of large scale language model society", citationCount: 523, year: 2023 },
-    { title: "[7] Webgpt: Browser-assisted question-answering with human feedback", citationCount: 1100, year: 2021 },
-    { title: "[9] GPT-4 Technical Report", citationCount: 7299, year: 2023 },
-    { title: "[10] Hugginggpt: Solving ai tasks with chatgpt and its friends in huggingface", citationCount: 1016, year: 2023 }
-  ]
-};
+// const data = {
+//   mainPaper: {
+//     title: "MACRec: A Multi-Agent Collaboration Framework for Recommendation",
+//     citationCount: 4,
+//     year: 2024
+//   },
+//   citedPapers: [
+//     { title: "[1] Language models are few-shot learners", citationCount: 38863, year: 2020 },
+//     { title: "[3] Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents", citationCount: 155, year: 2023 },
+//     { title: "[4] Improving Factuality and Reasoning in Language Models through Multiagent Debate", citationCount: 437, year: 2023 },
+//     { title: "[6] Camel: Communicative agents for 'mind' exploration of large scale language model society", citationCount: 523, year: 2023 },
+//     { title: "[7] Webgpt: Browser-assisted question-answering with human feedback", citationCount: 1100, year: 2021 },
+//     { title: "[9] GPT-4 Technical Report", citationCount: 7299, year: 2023 },
+//     { title: "[10] Hugginggpt: Solving ai tasks with chatgpt and its friends in huggingface", citationCount: 1016, year: 2023 }
+//   ]
+// };
 
 let svg, simulation, nodes, links;
 
-const width = window.innerWidth;
-const height = window.innerHeight;
+const width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+const height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+console.log(width)
+console.log(height)
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // HTML의 <script id="papers-data">에서 JSON 데이터 가져오기
+  const papersElement = document.getElementById("papers-data");
+
+  if (!papersElement) {
+    console.error("Error: 'papers-data' element not found.");
+    return;
+  }
+  const papersJSON = papersElement.textContent;
+
+  try {
+    const papers = JSON.parse(papersJSON);
+
+    data = {
+      mainPaper: {
+        title: "MACRec: A Multi-Agent Collaboration Framework for Recommendation",
+        citationCount: 4,
+        year: 2024
+      },
+      citedPapers: papers.map(paper => ({
+        title: `[${paper.id}] ${paper.title}`,
+        citationCount: paper.citationCount,
+        year: paper.year
+      }))
+    };
+    createGraph();
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+  }
+
+
+
+});
 
 function createGraph() {
   svg = d3.select("body")
@@ -36,7 +74,7 @@ function createGraph() {
   nodes = [
     {
       id: data.mainPaper.title,
-      size: Math.max(20, Math.log(data.mainPaper.citationCount + 1) * 15),
+      size: Math.max(10, Math.log(data.mainPaper.citationCount + 1) * 10),
       citationCount: data.mainPaper.citationCount,
       year: data.mainPaper.year
     }
@@ -47,7 +85,7 @@ function createGraph() {
   data.citedPapers.forEach(paper => {
     nodes.push({
       id: paper.title,
-      size: Math.max(20, Math.log(paper.citationCount + 1) * 15),
+      size: Math.max(20, Math.log(paper.citationCount + 1) * 8),
       citationCount: paper.citationCount,
       year: paper.year
     });
@@ -132,6 +170,7 @@ function createGraph() {
     });
 
   simulation.force("link").links(links);
+  console.log("Graph created successfully!"); // ✅ 디버깅용 로그 추가
 }
 
 function dragstarted(event) {
@@ -168,7 +207,6 @@ function sortByYearAndCitation() {
       yearGroups[node.year] = [];
     }
     yearGroups[node.year].push(node);
-    console.log(yearGroups)
   });
 
   // 2️⃣ 각 연도 그룹을 인용 수 기준으로 정렬
@@ -213,7 +251,3 @@ function sortByYearAndCitation() {
     .transition().duration(500) // 애니메이션 효과
     .style("opacity", 1);
 }
-
-
-
-createGraph();
