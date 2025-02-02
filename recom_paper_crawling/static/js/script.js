@@ -65,8 +65,8 @@ function createGraph() {
     .attr("height", height);
 
   simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(d => d.id).distance(200))
-    .force("charge", d3.forceManyBody().strength(-300))
+    .force("link", d3.forceLink().id(d => d.id).distance(300))
+    .force("charge", d3.forceManyBody().strength(-800))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(0.1))
     .force("y", d3.forceY(height / 2).strength(0.1));
@@ -85,7 +85,7 @@ function createGraph() {
   data.citedPapers.forEach(paper => {
     nodes.push({
       id: paper.title,
-      size: Math.max(20, Math.log(paper.citationCount + 1) * 8),
+      size: Math.max(10, Math.log(paper.citationCount + 1) * 9),
       citationCount: paper.citationCount,
       year: paper.year
     });
