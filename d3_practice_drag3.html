@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>SVG Drag Graph</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    svg {
+      border: 1px solid lightgray;
+      display: inline-block;
+      width: 100%;
+    }
+    circle {
+      fill: skyblue;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="d3Graph"></div>
+
+  <script>
+    // 그래프 크기 설정
+    var divWidth = document.querySelector("#d3Graph").clientWidth;
+    var vhWindowRatio = 420 / 590;
+    var divHeight = parseInt(divWidth * vhWindowRatio);
+
+    // SVG 생성
+    var svg = d3.select("#d3Graph").append("svg")
+      .attr("width", divWidth)
+      .attr("height", divHeight);
+
+    var width = divWidth;
+    var height = divHeight;
+
+    // 노드 데이터 생성
+    var rRatio = width / 590;
+    var radius = 20 * rRatio;
+    var nodes = d3.range(165).map(function (a) {
+      return { 
+        id: a,
+        x: (a % 15) * (radius + 1) * 2, 
+        y: Math.floor(a / 15) * (radius + 1) * 2 
+      };
+    });
+
+    // Force Simulation 설정
+    var simulation = d3.forceSimulation(nodes)
+      .force("collide", d3.forceCollide(radius + 1).iterations(4))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .on("tick", updatePositions);
+
+    // 노드 추가
+    var circles = svg.selectAll("circle")
+      .data(nodes)
+      .enter()
+      .append("circle")
+      .attr("r", radius)
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y)
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended)
+      );
+
+    // 위치 업데이트 함수
+    function updatePositions() {
+      circles
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
+    }
+
+    // 드래그 대상 찾기
+    function dragsubject(event) {
+      return simulation.find(event.x, event.y, radius);
+    }
+
+    // 드래그 시작
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    // 드래그 중
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    // 드래그 종료
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    // 창 크기 변경 시 업데이트
+    window.onload = function () {
+      width = document.querySelector("#d3Graph").clientWidth;
+      document.querySelector("#d3Graph").style.height = parseInt(width * vhWindowRatio) + "px";
+      height = document.querySelector("#d3Graph").clientHeight;
+
+      svg.attr("width", width).attr("height", height);
+    };
+  </script>
+
+</body>
+
+</html>

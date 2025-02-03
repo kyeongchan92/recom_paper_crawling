@@ -22,6 +22,44 @@ const height = Math.max(document.documentElement.clientHeight, window.innerHeigh
 
 console.log(width)
 console.log(height)
+const papersElement = document.getElementById("papers-data");
+const papersJSON = papersElement.textContent;
+const papers = JSON.parse(papersJSON);
+
+data = {
+  mainPaper: {
+    title: "MACRec: A Multi-Agent Collaboration Framework for Recommendation",
+    citationCount: 4,
+    year: 2024
+  },
+  citedPapers: papers.map(paper => ({
+    title: `[${paper.id}] ${paper.title}`,
+    citationCount: paper.citationCount,
+    year: paper.year
+  }))
+};
+
+nodes = [
+  {
+    id: data.mainPaper.title,
+    size: Math.max(10, Math.log(data.mainPaper.citationCount + 1) * 10),
+    citationCount: data.mainPaper.citationCount,
+    year: data.mainPaper.year
+  }
+];
+
+links = [];
+
+data.citedPapers.forEach(paper => {
+  nodes.push({
+    id: paper.title,
+    size: Math.max(10, Math.log(paper.citationCount + 1) * 6),
+    citationCount: paper.citationCount,
+    year: paper.year
+  });
+  links.push({ source: data.mainPaper.title, target: paper.title });
+});
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -32,31 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("Error: 'papers-data' element not found.");
     return;
   }
-  const papersJSON = papersElement.textContent;
-
   try {
-    const papers = JSON.parse(papersJSON);
-
-    data = {
-      mainPaper: {
-        title: "MACRec: A Multi-Agent Collaboration Framework for Recommendation",
-        citationCount: 4,
-        year: 2024
-      },
-      citedPapers: papers.map(paper => ({
-        title: `[${paper.id}] ${paper.title}`,
-        citationCount: paper.citationCount,
-        year: paper.year
-      }))
-    };
     createGraph();
   } catch (error) {
     console.error("Error parsing JSON:", error);
   }
-
-
-
 });
+
+
 
 function createGraph() {
   svg = d3.select("body")
@@ -64,33 +85,6 @@ function createGraph() {
     .attr("width", width)
     .attr("height", height);
 
-  simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(d => d.id).distance(300))
-    .force("charge", d3.forceManyBody().strength(-800))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("x", d3.forceX(width / 2).strength(0.1))
-    .force("y", d3.forceY(height / 2).strength(0.1));
-
-  nodes = [
-    {
-      id: data.mainPaper.title,
-      size: Math.max(10, Math.log(data.mainPaper.citationCount + 1) * 10),
-      citationCount: data.mainPaper.citationCount,
-      year: data.mainPaper.year
-    }
-  ];
-
-  links = [];
-
-  data.citedPapers.forEach(paper => {
-    nodes.push({
-      id: paper.title,
-      size: Math.max(10, Math.log(paper.citationCount + 1) * 6),
-      citationCount: paper.citationCount,
-      year: paper.year
-    });
-    links.push({ source: data.mainPaper.title, target: paper.title });
-  });
 
   svg.append("defs").append("marker")
     .attr("id", "arrow")
@@ -104,6 +98,7 @@ function createGraph() {
     .attr("d", "M0,-5L10,0L0,5")
     .attr("fill", "#aaa");
 
+  console.log("links : ", links)
   const link = svg.append("g")
     .attr("class", "links")
     .selectAll("line")
@@ -113,6 +108,7 @@ function createGraph() {
     .attr("stroke", "#aaa")
     .attr("stroke-width", 1.5)
     .attr("marker-end", "url(#arrow)");
+  console.log("links : ", links)
 
   // ⬇⬇⬇ 원과 텍스트를 같은 <g> 그룹 내에 추가 ⬇⬇⬇
   const nodeGroup = svg.append("g")
@@ -157,17 +153,22 @@ function createGraph() {
     .attr("class", "title-label")
   // .call(wrapText, 100); // 긴 제목을 자동 줄바꿈 (아래에 wrapText 함수 추가됨)
 
-  simulation
-    .nodes(nodes)
-    .on("tick", () => {
-      link
-        .attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
+  simulation = d3.forceSimulation(nodes)
+    // .force("link", d3.forceLink().id(d => d.id).distance(300))
+    .force("charge", d3.forceManyBody().strength(-300))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("x", d3.forceX(width / 2).strength(0.1))
+    .force("y", d3.forceY(height / 2).strength(0.1));
 
-      nodeGroup.attr("transform", d => `translate(${d.x}, ${d.y})`);
-    });
+  simulation.nodes(nodes)
+            .on("tick", () => {
+                                link.attr("x1", d => d.source.x)
+                                    .attr("y1", d => d.source.y)
+                                    .attr("x2", d => d.target.x)
+                                    .attr("y2", d => d.target.y);
+                                nodeGroup.attr("transform", d => `translate(${d.x}, ${d.y})`);
+                              }
+);
 
   simulation.force("link").links(links);
   console.log("Graph created successfully!"); // ✅ 디버깅용 로그 추가
@@ -175,22 +176,23 @@ function createGraph() {
 
 function dragstarted(event) {
   if (!event.active) {
-    simulation.alphaTarget(0.3).restart()
+    simulation.alphaTarget(0.3).restart();
   }
-  event.subject.fx = event.subject.x;
-  event.subject.fy = event.subject.y
+  // event.subject.fx = event.subject.x;
+  // event.subject.fy = event.subject.y;
 
   // ⬇⬇⬇ 드래그 발생 시 연도 라벨 제거 ⬇⬇⬇
-  svg.select(".year-labels").remove();
+  // svg.select(".year-labels").remove();
 
 }
 
 function dragged(event) {
   event.subject.fx = event.x;
-  event.subject.fy = event.y
+  event.subject.fy = event.y;
+
 }
 
-function dragended() {
+function dragended(event) {
   if (!event.active) {
     simulation.alphaTarget(0)
   }
@@ -230,7 +232,7 @@ function sortByYearAndCitation() {
   });
 
   // 4️⃣ Force Simulation 다시 실행
-  simulation.alpha(1).restart();
+  // simulation.alpha(1).restart();
 
   // 5️⃣ 연도를 화면 하단에 추가 (버튼을 눌렀을 때만 보이게)
   svg.select(".year-labels").remove(); // 기존 연도 라벨 삭제
