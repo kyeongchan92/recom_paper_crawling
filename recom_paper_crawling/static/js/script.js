@@ -85,7 +85,7 @@ function createGraph() {
   data.citedPapers.forEach(paper => {
     nodes.push({
       id: paper.title,
-      size: Math.max(10, Math.log(paper.citationCount + 1) * 9),
+      size: Math.max(10, Math.log(paper.citationCount + 1) * 6),
       citationCount: paper.citationCount,
       year: paper.year
     });
