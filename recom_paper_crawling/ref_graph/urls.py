@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('upload/', views.file_upload_view, name='file_upload'),
+    path("parse/<int:file_id>/", views.parse_file_view, name="parse_file"),
 ]
 
 from django.conf import settings

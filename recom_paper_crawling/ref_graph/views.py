@@ -1,7 +1,9 @@
 import json
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from ref_graph.models import UploadedFile
 from ref_graph.form import FileUploadForm
 
 from django.shortcuts import render, redirect
@@ -184,6 +186,8 @@ def index(request):
     return render(request, "index.html", context)
 
 
+import os
+from django.shortcuts import render
 from django.http import JsonResponse
 
 def file_upload_view(request):
@@ -191,10 +195,19 @@ def file_upload_view(request):
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             file_instance = form.save()
+            print({
+                "success": True,
+                "message": "파일 업로드 성공!",
+                "file_id": file_instance.id,  # 업로드된 파일 ID 반환
+                "file_name": file_instance.file.name,
+                "file_url": file_instance.file.url  # 프론트에서 사용할 URL
+            })
             return JsonResponse({
                 "success": True,
                 "message": "파일 업로드 성공!",
-                "file_url": file_instance.file.url  # 업로드된 파일 URL 반환
+                "file_id": file_instance.id,  # 업로드된 파일 ID 반환
+                "file_name": file_instance.file.name,
+                "file_url": file_instance.file.url  # 프론트에서 사용할 URL
             })
         else:
             return JsonResponse({"success": False, "errors": form.errors})
@@ -202,3 +215,30 @@ def file_upload_view(request):
     form = FileUploadForm()
     return render(request, "file_upload.html", {"form": form})
 
+
+from django.http import JsonResponse
+from llama_index.readers.file import PDFReader  # PDF 파일을 읽기 위한 리더
+
+def parse_file_view(request, file_id):
+    try:
+        # file_instance = UploadedFile.objects.get(id=file_id)
+        # file_path = os.path.join(settings.MEDIA_ROOT, file_instance.file.name)
+
+        # # LlamaParse로 PDF 파일 읽기
+        # loader = PDFReader()
+        # documents = loader.load_data(file_path)
+
+        # # LlamaParse 결과를 JSON으로 반환
+        # extracted_text = "\n".join([doc.text for doc in documents])
+
+        extracted_text = '파싱결과'
+        
+        return JsonResponse({
+            "success": True,
+            "message": "파일 파싱 성공!",
+            "extracted_text": extracted_text[:1000]  # 앞부분 1000자 미리보기
+        })
+    except UploadedFile.DoesNotExist:
+        return JsonResponse({"success": False, "error": "파일을 찾을 수 없습니다."})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})

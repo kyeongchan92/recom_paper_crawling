@@ -17,6 +17,8 @@
     <button type="submit">업로드</button>
   </form>
 
+  <button id="parse-btn" style="display:none;">파싱 시작</button>
+  <pre id="parsed-output"></pre>
 
   <!-- Django에서 전달한 JSON 데이터를 먼저 로드 -->
   <script id="papers-data" type="application/json">
@@ -60,6 +62,23 @@
           alert("파일 업로드 성공!\n업로드된 파일: " + data.file_url);
         } else {
           alert("파일 업로드 실패! " + JSON.stringify(data.errors));
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+  });
+
+  document.getElementById("parse-btn").addEventListener("click", function () {
+    let fileId = this.dataset.fileId;
+
+    fetch(`/parse/${fileId}/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("parsed-output").textContent = data.extracted_text;
+        } else {
+          alert("파일 파싱 실패!");
         }
       })
       .catch(error => {
