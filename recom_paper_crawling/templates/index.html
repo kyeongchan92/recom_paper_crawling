@@ -36,6 +36,7 @@
 
     let formData = new FormData();
     let fileInput = document.getElementById("file-input");
+    let parseButton = document.getElementById("parse-btn");  // 파싱 버튼 선택
 
     if (fileInput.files.length === 0) {
       alert("파일을 선택하세요!");
@@ -60,6 +61,12 @@
       .then(data => {
         if (data.success) {
           alert("파일 업로드 성공!\n업로드된 파일: " + data.file_url);
+
+          // ✅ "파싱 시작" 버튼 보이기
+          parseButton.style.display = "block";
+
+          // ✅ 파일 ID를 버튼에 저장하여 이후 클릭 시 사용할 수 있도록 함
+          parseButton.dataset.fileId = data.file_id;
         } else {
           alert("파일 업로드 실패! " + JSON.stringify(data.errors));
         }
@@ -70,7 +77,12 @@
   });
 
   document.getElementById("parse-btn").addEventListener("click", function () {
-    let fileId = this.dataset.fileId;
+    let fileId = this.dataset.fileId;  // ✅ 저장된 file_id 가져오기
+
+    if (!fileId) {
+      alert("파일을 업로드한 후 파싱을 시작하세요!");
+      return;
+    }
 
     fetch(`/parse/${fileId}/`)
       .then(response => response.json())
