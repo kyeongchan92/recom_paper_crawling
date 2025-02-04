@@ -1,106 +1,164 @@
 import json
+from django.http import JsonResponse
 from django.shortcuts import render
 
-papers = {1: {'Title': 'Language models are few-shot learners',
-  'Author(s)': 'Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al.',
-  'Conference': 'Advances in neural information processing systems 33 (2020), 1877–1901',
-  'citation_count': {'value': 39209, 'date': '2025-01-28 21:45:37'}},
- 2: {'Title': 'Trends in distributed artificial intelligence',
-  'Author(s)': 'Brahim Chaib-Draa, Bernard Moulin, René Mandiau, and Patrick Millot',
-  'Conference': 'Artificial Intelligence Review 6 (1992), 35–66',
-  'citation_count': {'value': 282, 'date': '2025-01-28 21:45:46'}},
- 3: {'Title': 'Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents',
-  'Author(s)': 'Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chen Qian, Chi-Min Chan, Yujia Qin, Yaxi Lu, Ruobing Xie, et al.',
-  'Conference': 'arXiv preprint arXiv:2308.10848 (2023)',
-  'citation_count': {'value': 156, 'date': '2025-01-28 21:45:49'}},
- 4: {'Title': 'Improving Factuality and Reasoning in Language Models through Multiagent Debate',
-  'Author(s)': 'Yilun Du, Shuang Li, Antonio Torralba, Joshua B Tenenbaum, and Igor Mordatch',
-  'Conference': 'arXiv preprint arXiv:2305.14325 (2023)',
-  'citation_count': {'value': 446, 'date': '2025-01-28 21:45:51'}},
- 5: {'Title': 'Recommender ai agent: Integrating large language models for interactive recommendations',
-  'Author(s)': 'Xu Huang, Jianxun Lian, Yuxuan Lei, Jing Yao, Defu Lian, and Xing Xie',
-  'Conference': 'arXiv preprint arXiv:2308.16505 (2023)',
-  'citation_count': {'value': 79, 'date': '2025-01-28 21:45:56'}},
- 6: {'Title': "Camel: Communicative agents for 'mind' exploration of large scale language model society",
-  'Author(s)': 'Guohao Li, Hasan Abed Al Kader Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem',
-  'Conference': 'arXiv preprint arXiv:2303.17760 (2023)',
-  'citation_count': {'value': 531, 'date': '2025-01-28 21:45:58'}},
- 7: {'Title': 'Webgpt: Browser-assisted question-answering with human feedback',
-  'Author(s)': 'Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, et al.',
-  'Conference': 'arXiv preprint arXiv:2112.09332 (2021)',
-  'citation_count': {'value': 1108, 'date': '2025-01-28 21:46:01'}},
- 8: {'Title': 'GPT-in-the-Loop: Adaptive Decision-Making for Multiagent Systems',
-  'Author(s)': 'Nathalia Nascimento, Paulo Alencar, and Donald Cowan',
-  'Conference': 'arXiv preprint arXiv:2308.10435 (2023)',
-  'citation_count': {'value': 11, 'date': '2025-01-28 21:46:07'}},
- 9: {'Title': 'GPT-4 Technical Report',
-  'Author(s)': 'OpenAI',
-  'Conference': 'arXiv preprint arXiv:2303.08774 (2023)',
-  'citation_count': {'value': 7486, 'date': '2025-01-28 21:46:10'}},
- 10: {'Title': 'Hugginggpt: Solving ai tasks with chatgpt and its friends in huggingface',
-  'Author(s)': 'Yongliang Shen, Kaitao Song, Xu Tan, Dongsheng Li, Weiming Lu, and Yueting Zhuang',
-  'Conference': 'arXiv preprint arXiv:2303.17580 (2023)',
-  'citation_count': {'value': 1029, 'date': '2025-01-28 21:46:13'}},
- 11: {'Title': 'RAH! RecSys-Assistant-Human: A Human-Central Recommendation Framework with Large Language Models',
-  'Author(s)': 'Yubo Shu, Hansu Gu, Peng Zhang, Haonan Zhang, Tun Lu, Dongsheng Li, and Ning Gu',
-  'Conference': 'arXiv preprint arXiv:2308.09904 (2023)',
-  'citation_count': {'value': 17, 'date': '2025-01-28 21:46:18'}},
- 12: {'Title': 'Multiagent systems: A survey from a machine learning perspective',
-  'Author(s)': 'Peter Stone and Manuela Veloso',
-  'Conference': 'Autonomous Robots 8 (2000), 345–383',
-  'citation_count': {'value': 2064, 'date': '2025-01-28 21:46:23'}},
- 13: {'Title': 'Collaborative-Enhanced Prediction of Spending on Newly Downloaded Mobile Games under Consumption Uncertainty',
-  'Author(s)': 'Peijie Sun, Yifan Wang, Min Zhang, Chuhan Wu, Yan Fang, Hong Zhu, Yuan Fang, and Meng Wang',
-  'Conference': 'WWW2024, Industry Track (2024)',
-  'citation_count': {'value': 9, 'date': '2025-01-28 21:46:29'}},
- 14: {'Title': 'Neighborhood-Enhanced Supervised Contrastive Learning for Collaborative Filtering',
-  'Author(s)': 'Peijie Sun, Le Wu, Kun Zhang, Xiangzhi Chen, and Meng Wang',
-  'Conference': 'IEEE Transactions on Knowledge and Data Engineering (2023)',
-  'citation_count': {'value': 24, 'date': '2025-01-28 21:46:34'}},
- 15: {'Title': 'Llama: Open and efficient foundation language models',
-  'Author(s)': 'Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al.',
-  'Conference': 'arXiv preprint arXiv:2302.13971 (2023)',
-  'citation_count': {'value': 12263, 'date': '2025-01-28 21:46:36'}},
- 16: {'Title': 'Grandmaster level in StarCraft II using multi-agent reinforcement learning',
-  'Author(s)': 'Oriol Vinyals, Igor Babuschkin, Wojciech M Czarnecki, Michaël Mathieu, Andrew Dudzik, Junyoung Chung, David H Choi, Richard Powell, Timo Ewalds, Petko Georgiev, et al.',
-  'Conference': 'Nature 575, 7782 (2019), 350–354',
-  'citation_count': {'value': 5054, 'date': '2025-01-28 21:46:42'}},
- 17: {'Title': 'When Large Language Model based Agent Meets User Behavior Analysis: A Novel User Simulation Paradigm',
-  'Author(s)': 'Lei Wang, Jingsen Zhang, Hao Yang, Zhiyuan Chen, Jiakai Tang, Zeyu Zhang, Xu Chen, Yankai Lin, Ruihua Song, Wayne Xin Zhao, et al.',
-  'Conference': 'arXiv preprint ArXiv:2306.02552 (2023)',
-  'citation_count': {'value': 22, 'date': '2025-01-28 21:46:45'}},
- 18: {'Title': 'Rec-mind: Large language model powered agent for recommendation',
-  'Author(s)': 'Yancheng Wang, Ziyan Jiang, Zheng Chen, Fan Yang, Yingxue Zhou, Eunah Cho, Xing Fan, Xiaojiang Huang, Yanbin Lu, and Yingzhen Yang',
-  'Conference': 'arXiv preprint arXiv:2308.14296 (2023)',
-  'citation_count': {'value': 97, 'date': '2025-01-28 21:46:50'}},
- 19: {'Title': 'Intelligent agents: Theory and practice',
-  'Author(s)': 'Michael Wooldridge and Nicholas R Jennings',
-  'Conference': 'The knowledge engineering review 10, 2 (1995), 115–152',
-  'citation_count': {'value': 11878, 'date': '2025-01-28 21:46:54'}},
- 20: {'Title': 'Autogen: Enabling next-gen llm applications via multi-agent conversation framework',
-  'Author(s)': 'Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Shaokun Zhang, Erkang Zhu, Beibin Li, Li Jiang, Xiaoyun Zhang, and Chi Wang',
-  'Conference': 'arXiv preprint arXiv:2308.08155 (2023)',
-  'citation_count': {'value': 692, 'date': '2025-01-28 21:46:57'}},
- 21: {'Title': 'React: Synergizing reasoning and acting in language models',
-  'Author(s)': 'Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao',
-  'Conference': 'arXiv preprint arXiv:2210.03629 (2022)',
-  'citation_count': {'value': 2096, 'date': '2025-01-28 21:46:59'}},
- 22: {'Title': 'Glm-130b: An open bilingual pre-trained model',
-  'Author(s)': 'Aohan Zeng, Xiao Liu, Zhengxiao Du, Zihan Wang, Hanyu Lai, Ming Ding, Zhuoyi Yang, Yifan Xu, Wendi Zheng, Xiao Xia, et al.',
-  'Conference': 'arXiv preprint arXiv:2210.02414 (2022)',
-  'citation_count': {'value': 589, 'date': '2025-01-28 21:47:05'}},
- 23: {'Title': 'On generative agents in recommendation',
-  'Author(s)': 'An Zhang, Leheng Sheng, Yuxin Chen, Hao Li, Yang Deng, Xiang Wang, and Tat-Seng Chua',
-  'Conference': 'arXiv preprint arXiv:2310.10108 (2023)',
-  'citation_count': {'value': 91, 'date': '2025-01-28 21:47:11'}},
- 24: {'Title': 'Building cooperative embodied agents modularly with large language models',
-  'Author(s)': 'Hongxin Zhang, Weihua Du, Jiaming Shan, Qinhong Zhou, Yilun Du, Joshua B Tenenbaum, Tianmin Shu, and Chuang Gan',
-  'Conference': 'arXiv preprint arXiv:2307.02485 (2023)',
-  'citation_count': {'value': 85, 'date': '2025-01-28 21:47:17'}},
- 25: {'Title': 'Agentcf: Collaborative learning with autonomous language agents for recommender systems',
-  'Author(s)': 'Junjie Zhang, Yupeng Hou, Ruobing Xie, Wenqi Sun, Julian McAuley, Wayne Xin Zhao, Leyu Lin, and Ji-Rong Wen',
-  'Conference': 'arXiv preprint arXiv:2310.09233 (2023)',
-  'citation_count': {'value': 55, 'date': '2025-01-28 21:47:24'}}}
+from ref_graph.form import FileUploadForm
+
+from django.shortcuts import render, redirect
+
+papers = {
+    1: {
+        "Title": "Language models are few-shot learners",
+        "Author(s)": "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al.",
+        "Conference": "Advances in neural information processing systems 33 (2020), 1877–1901",
+        "citation_count": {"value": 39209, "date": "2025-01-28 21:45:37"},
+    },
+    2: {
+        "Title": "Trends in distributed artificial intelligence",
+        "Author(s)": "Brahim Chaib-Draa, Bernard Moulin, René Mandiau, and Patrick Millot",
+        "Conference": "Artificial Intelligence Review 6 (1992), 35–66",
+        "citation_count": {"value": 282, "date": "2025-01-28 21:45:46"},
+    },
+    3: {
+        "Title": "Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents",
+        "Author(s)": "Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chen Qian, Chi-Min Chan, Yujia Qin, Yaxi Lu, Ruobing Xie, et al.",
+        "Conference": "arXiv preprint arXiv:2308.10848 (2023)",
+        "citation_count": {"value": 156, "date": "2025-01-28 21:45:49"},
+    },
+    4: {
+        "Title": "Improving Factuality and Reasoning in Language Models through Multiagent Debate",
+        "Author(s)": "Yilun Du, Shuang Li, Antonio Torralba, Joshua B Tenenbaum, and Igor Mordatch",
+        "Conference": "arXiv preprint arXiv:2305.14325 (2023)",
+        "citation_count": {"value": 446, "date": "2025-01-28 21:45:51"},
+    },
+    5: {
+        "Title": "Recommender ai agent: Integrating large language models for interactive recommendations",
+        "Author(s)": "Xu Huang, Jianxun Lian, Yuxuan Lei, Jing Yao, Defu Lian, and Xing Xie",
+        "Conference": "arXiv preprint arXiv:2308.16505 (2023)",
+        "citation_count": {"value": 79, "date": "2025-01-28 21:45:56"},
+    },
+    6: {
+        "Title": "Camel: Communicative agents for 'mind' exploration of large scale language model society",
+        "Author(s)": "Guohao Li, Hasan Abed Al Kader Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem",
+        "Conference": "arXiv preprint arXiv:2303.17760 (2023)",
+        "citation_count": {"value": 531, "date": "2025-01-28 21:45:58"},
+    },
+    7: {
+        "Title": "Webgpt: Browser-assisted question-answering with human feedback",
+        "Author(s)": "Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, et al.",
+        "Conference": "arXiv preprint arXiv:2112.09332 (2021)",
+        "citation_count": {"value": 1108, "date": "2025-01-28 21:46:01"},
+    },
+    8: {
+        "Title": "GPT-in-the-Loop: Adaptive Decision-Making for Multiagent Systems",
+        "Author(s)": "Nathalia Nascimento, Paulo Alencar, and Donald Cowan",
+        "Conference": "arXiv preprint arXiv:2308.10435 (2023)",
+        "citation_count": {"value": 11, "date": "2025-01-28 21:46:07"},
+    },
+    9: {
+        "Title": "GPT-4 Technical Report",
+        "Author(s)": "OpenAI",
+        "Conference": "arXiv preprint arXiv:2303.08774 (2023)",
+        "citation_count": {"value": 7486, "date": "2025-01-28 21:46:10"},
+    },
+    10: {
+        "Title": "Hugginggpt: Solving ai tasks with chatgpt and its friends in huggingface",
+        "Author(s)": "Yongliang Shen, Kaitao Song, Xu Tan, Dongsheng Li, Weiming Lu, and Yueting Zhuang",
+        "Conference": "arXiv preprint arXiv:2303.17580 (2023)",
+        "citation_count": {"value": 1029, "date": "2025-01-28 21:46:13"},
+    },
+    11: {
+        "Title": "RAH! RecSys-Assistant-Human: A Human-Central Recommendation Framework with Large Language Models",
+        "Author(s)": "Yubo Shu, Hansu Gu, Peng Zhang, Haonan Zhang, Tun Lu, Dongsheng Li, and Ning Gu",
+        "Conference": "arXiv preprint arXiv:2308.09904 (2023)",
+        "citation_count": {"value": 17, "date": "2025-01-28 21:46:18"},
+    },
+    12: {
+        "Title": "Multiagent systems: A survey from a machine learning perspective",
+        "Author(s)": "Peter Stone and Manuela Veloso",
+        "Conference": "Autonomous Robots 8 (2000), 345–383",
+        "citation_count": {"value": 2064, "date": "2025-01-28 21:46:23"},
+    },
+    13: {
+        "Title": "Collaborative-Enhanced Prediction of Spending on Newly Downloaded Mobile Games under Consumption Uncertainty",
+        "Author(s)": "Peijie Sun, Yifan Wang, Min Zhang, Chuhan Wu, Yan Fang, Hong Zhu, Yuan Fang, and Meng Wang",
+        "Conference": "WWW2024, Industry Track (2024)",
+        "citation_count": {"value": 9, "date": "2025-01-28 21:46:29"},
+    },
+    14: {
+        "Title": "Neighborhood-Enhanced Supervised Contrastive Learning for Collaborative Filtering",
+        "Author(s)": "Peijie Sun, Le Wu, Kun Zhang, Xiangzhi Chen, and Meng Wang",
+        "Conference": "IEEE Transactions on Knowledge and Data Engineering (2023)",
+        "citation_count": {"value": 24, "date": "2025-01-28 21:46:34"},
+    },
+    15: {
+        "Title": "Llama: Open and efficient foundation language models",
+        "Author(s)": "Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al.",
+        "Conference": "arXiv preprint arXiv:2302.13971 (2023)",
+        "citation_count": {"value": 12263, "date": "2025-01-28 21:46:36"},
+    },
+    16: {
+        "Title": "Grandmaster level in StarCraft II using multi-agent reinforcement learning",
+        "Author(s)": "Oriol Vinyals, Igor Babuschkin, Wojciech M Czarnecki, Michaël Mathieu, Andrew Dudzik, Junyoung Chung, David H Choi, Richard Powell, Timo Ewalds, Petko Georgiev, et al.",
+        "Conference": "Nature 575, 7782 (2019), 350–354",
+        "citation_count": {"value": 5054, "date": "2025-01-28 21:46:42"},
+    },
+    17: {
+        "Title": "When Large Language Model based Agent Meets User Behavior Analysis: A Novel User Simulation Paradigm",
+        "Author(s)": "Lei Wang, Jingsen Zhang, Hao Yang, Zhiyuan Chen, Jiakai Tang, Zeyu Zhang, Xu Chen, Yankai Lin, Ruihua Song, Wayne Xin Zhao, et al.",
+        "Conference": "arXiv preprint ArXiv:2306.02552 (2023)",
+        "citation_count": {"value": 22, "date": "2025-01-28 21:46:45"},
+    },
+    18: {
+        "Title": "Rec-mind: Large language model powered agent for recommendation",
+        "Author(s)": "Yancheng Wang, Ziyan Jiang, Zheng Chen, Fan Yang, Yingxue Zhou, Eunah Cho, Xing Fan, Xiaojiang Huang, Yanbin Lu, and Yingzhen Yang",
+        "Conference": "arXiv preprint arXiv:2308.14296 (2023)",
+        "citation_count": {"value": 97, "date": "2025-01-28 21:46:50"},
+    },
+    19: {
+        "Title": "Intelligent agents: Theory and practice",
+        "Author(s)": "Michael Wooldridge and Nicholas R Jennings",
+        "Conference": "The knowledge engineering review 10, 2 (1995), 115–152",
+        "citation_count": {"value": 11878, "date": "2025-01-28 21:46:54"},
+    },
+    20: {
+        "Title": "Autogen: Enabling next-gen llm applications via multi-agent conversation framework",
+        "Author(s)": "Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Shaokun Zhang, Erkang Zhu, Beibin Li, Li Jiang, Xiaoyun Zhang, and Chi Wang",
+        "Conference": "arXiv preprint arXiv:2308.08155 (2023)",
+        "citation_count": {"value": 692, "date": "2025-01-28 21:46:57"},
+    },
+    21: {
+        "Title": "React: Synergizing reasoning and acting in language models",
+        "Author(s)": "Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao",
+        "Conference": "arXiv preprint arXiv:2210.03629 (2022)",
+        "citation_count": {"value": 2096, "date": "2025-01-28 21:46:59"},
+    },
+    22: {
+        "Title": "Glm-130b: An open bilingual pre-trained model",
+        "Author(s)": "Aohan Zeng, Xiao Liu, Zhengxiao Du, Zihan Wang, Hanyu Lai, Ming Ding, Zhuoyi Yang, Yifan Xu, Wendi Zheng, Xiao Xia, et al.",
+        "Conference": "arXiv preprint arXiv:2210.02414 (2022)",
+        "citation_count": {"value": 589, "date": "2025-01-28 21:47:05"},
+    },
+    23: {
+        "Title": "On generative agents in recommendation",
+        "Author(s)": "An Zhang, Leheng Sheng, Yuxin Chen, Hao Li, Yang Deng, Xiang Wang, and Tat-Seng Chua",
+        "Conference": "arXiv preprint arXiv:2310.10108 (2023)",
+        "citation_count": {"value": 91, "date": "2025-01-28 21:47:11"},
+    },
+    24: {
+        "Title": "Building cooperative embodied agents modularly with large language models",
+        "Author(s)": "Hongxin Zhang, Weihua Du, Jiaming Shan, Qinhong Zhou, Yilun Du, Joshua B Tenenbaum, Tianmin Shu, and Chuang Gan",
+        "Conference": "arXiv preprint arXiv:2307.02485 (2023)",
+        "citation_count": {"value": 85, "date": "2025-01-28 21:47:17"},
+    },
+    25: {
+        "Title": "Agentcf: Collaborative learning with autonomous language agents for recommender systems",
+        "Author(s)": "Junjie Zhang, Yupeng Hou, Ruobing Xie, Wenqi Sun, Julian McAuley, Wayne Xin Zhao, Leyu Lin, and Ji-Rong Wen",
+        "Conference": "arXiv preprint arXiv:2310.09233 (2023)",
+        "citation_count": {"value": 55, "date": "2025-01-28 21:47:24"},
+    },
+}
+
 
 def index(request):
     # 데이터를 JavaScript에서 사용하기 위해 JSON 형식으로 변환
@@ -111,14 +169,36 @@ def index(request):
             "authors": paper["Author(s)"],
             "conference": paper["Conference"],
             "citationCount": paper["citation_count"]["value"],
-            "year": int(paper["Conference"].split("(")[-1].split(")")[0]) if "(" in paper["Conference"] else None
+            "year": (
+                int(paper["Conference"].split("(")[-1].split(")")[0])
+                if "(" in paper["Conference"]
+                else None
+            ),
         }
         for key, paper in papers.items()
     ]
 
     # context로 데이터 전달
-    context = {
-        "papers_json": json.dumps(paper_list)  # JSON으로 변환
-    }
+    context = {"papers_json": json.dumps(paper_list)}  # JSON으로 변환
 
-    return render(request, 'index.html', context)
+    return render(request, "index.html", context)
+
+
+from django.http import JsonResponse
+
+def file_upload_view(request):
+    if request.method == "POST":
+        form = FileUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            file_instance = form.save()
+            return JsonResponse({
+                "success": True,
+                "message": "파일 업로드 성공!",
+                "file_url": file_instance.file.url  # 업로드된 파일 URL 반환
+            })
+        else:
+            return JsonResponse({"success": False, "errors": form.errors})
+
+    form = FileUploadForm()
+    return render(request, "file_upload.html", {"form": form})
+

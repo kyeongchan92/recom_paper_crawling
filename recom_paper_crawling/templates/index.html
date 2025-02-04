@@ -11,6 +11,12 @@
 </head>
 
 <body>
+  <form id="upload-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" id="file-input" name="file">
+    <button type="submit">업로드</button>
+  </form>
+
 
   <!-- Django에서 전달한 JSON 데이터를 먼저 로드 -->
   <script id="papers-data" type="application/json">
@@ -22,5 +28,44 @@
   <!-- script.js를 가장 마지막에 실행 -->
   <script defer src="{% static 'js/script.js' %}"></script>
 </body>
+<script>
+  document.getElementById("upload-form").addEventListener("submit", function (event) {
+    event.preventDefault();  // 기본 제출 동작 방지
+
+    let formData = new FormData();
+    let fileInput = document.getElementById("file-input");
+
+    if (fileInput.files.length === 0) {
+      alert("파일을 선택하세요!");
+      return;
+    }
+
+    formData.append("file", fileInput.files[0]);
+
+    fetch("{% url 'file_upload' %}", {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();  // ✅ JSON 응답이 아닐 경우 자동으로 에러 발생
+      })
+      .then(data => {
+        if (data.success) {
+          alert("파일 업로드 성공!\n업로드된 파일: " + data.file_url);
+        } else {
+          alert("파일 업로드 실패! " + JSON.stringify(data.errors));
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+  });
+</script>
 
 </html>
