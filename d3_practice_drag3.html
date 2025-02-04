@@ -36,18 +36,21 @@
 
     var width = divWidth;
     var height = divHeight;
+    console.log("width", width)
+    console.log("height", height)
 
     // 노드 데이터 생성
     var rRatio = width / 590;
+    console.log("rRatio :", rRatio)
     var radius = 20 * rRatio;
     var nodes = d3.range(165).map(function (a) {
       return { 
         id: a,
-        x: (a % 15) * (radius + 1) * 2, 
-        y: Math.floor(a / 15) * (radius + 1) * 2 
+        x: (a % 12) * (radius + 1) * 2, 
+        y: Math.floor(a / 11) * (radius + 1) * 2 
       };
     });
-
+    console.log("nodes : ", nodes)
     // Force Simulation 설정
     var simulation = d3.forceSimulation(nodes)
       .force("collide", d3.forceCollide(radius + 1).iterations(4))
