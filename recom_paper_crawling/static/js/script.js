@@ -79,12 +79,40 @@ const circle_tags = svg.selectAll("circle")
   .enter()
   .append("circle")
   .attr("r", d => radiusScale(d.citationCount) + 5)
-  .attr("fill", "steelblue")
+  .attr("fill", "skyblue")
+  .attr("stroke", "#333")
+  .attr("stroke-width", 1.5)
+  .on("mouseover", function () {
+    d3.select(this).attr("fill", "#ff4500");
+  })
+  .on("mouseout", function () {
+    d3.select(this).attr("fill", "skyblue");
+  })
   .call(d3.drag()
     .on("start", dragStarted)
     .on("drag", dragged)
     .on("end", dragEnded)
   );
+
+const title_texts = svg.selectAll(".title-text")  // ✅ 클래스 추가
+  .data(nodes)
+  .enter()
+  .append("text")
+  .classed("title-text", true)  // ✅ 클래스 부여
+  .text(d => d.id)
+  .attr("dx", d => d.size / 10);
+
+const citation_count_texts = svg.selectAll(".citation-text")  // ✅ 다른 클래스 사용
+  .data(nodes)
+  .enter()
+  .append("text")
+  .classed("citation-text", true)  // ✅ 클래스 부여
+  .text(d => `${d.citationCount.toLocaleString()}`)
+  .attr("fill", "white")
+  .attr("font-size", d => Math.max(8, d.size / 3))
+  .attr("text-anchor", "middle")
+  .attr("dy", d => d.size / 20);; // 크기를 원 크기에 비례하게 설정
+
 
 const simulation = d3.forceSimulation(nodes)
   .force("charge", d3.forceManyBody().strength(0))
@@ -97,9 +125,13 @@ function ticked() {
     .attr("cx", d => d.x)
     .attr("cy", d => d.y);
 
-  // labels
-  //   .attr("x", d => d.x)
-  //   .attr("y", d => d.y + 4);
+  title_texts
+    .attr("x", d => d.x)
+    .attr("y", d => d.y + 20);
+
+  citation_count_texts
+    .attr("x", d => d.x)
+    .attr("y", d => d.y + 4);
 }
 
 function dragStarted(event, d) {
