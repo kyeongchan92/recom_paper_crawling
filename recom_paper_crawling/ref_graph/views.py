@@ -3,6 +3,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from ref_graph.kdb_rag.rag_parser import RagParser
 from ref_graph.models import UploadedFile
 from ref_graph.form import FileUploadForm
 
@@ -190,25 +191,30 @@ import os
 from django.shortcuts import render
 from django.http import JsonResponse
 
+
 def file_upload_view(request):
     if request.method == "POST":
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             file_instance = form.save()
-            print({
-                "success": True,
-                "message": "파일 업로드 성공!",
-                "file_id": file_instance.id,  # 업로드된 파일 ID 반환
-                "file_name": file_instance.file.name,
-                "file_url": file_instance.file.url  # 프론트에서 사용할 URL
-            })
-            return JsonResponse({
-                "success": True,
-                "message": "파일 업로드 성공!",
-                "file_id": file_instance.id,  # 업로드된 파일 ID 반환
-                "file_name": file_instance.file.name,
-                "file_url": file_instance.file.url  # 프론트에서 사용할 URL
-            })
+            print(
+                {
+                    "success": True,
+                    "message": "파일 업로드 성공!",
+                    "file_id": file_instance.id,  # 업로드된 파일 ID 반환
+                    "file_name": file_instance.file.name,
+                    "file_url": file_instance.file.url,  # 프론트에서 사용할 URL
+                }
+            )
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "파일 업로드 성공!",
+                    "file_id": file_instance.id,  # 업로드된 파일 ID 반환
+                    "file_name": file_instance.file.name,
+                    "file_url": file_instance.file.url,  # 프론트에서 사용할 URL
+                }
+            )
         else:
             return JsonResponse({"success": False, "errors": form.errors})
 
@@ -219,26 +225,64 @@ def file_upload_view(request):
 from django.http import JsonResponse
 from llama_index.readers.file import PDFReader  # PDF 파일을 읽기 위한 리더
 
+rag_parser = RagParser()
+from openai import OpenAI
+
+client = OpenAI()
+
+
 def parse_file_view(request, file_id):
     try:
-        # file_instance = UploadedFile.objects.get(id=file_id)
-        # file_path = os.path.join(settings.MEDIA_ROOT, file_instance.file.name)
+        file_instance = UploadedFile.objects.get(id=file_id)
+        file_path = os.path.join(settings.MEDIA_ROOT, file_instance.file.name)
+        print(f"file_path : {file_path}")
 
-        # # LlamaParse로 PDF 파일 읽기
-        # loader = PDFReader()
-        # documents = loader.load_data(file_path)
+        KDBAI_TABLE_NAME = "LlamaParse_Table"
+        table = rag_parser.db.table(KDBAI_TABLE_NAME)  # 기존 테이블 가져오기
 
-        # # LlamaParse 결과를 JSON으로 반환
-        # extracted_text = "\n".join([doc.text for doc in documents])
+        query = "이 논문의 제목이 뭐야?"
+        query_embedding = client.embeddings.create(
+            input=query, model="text-embedding-3-small"
+        )
 
-        extracted_text = '파싱결과'
+        results = table.search(
+            vectors={"flat": [query_embedding.data[0].embedding]},
+            n=5,
+            filter=[("<>", "document_id", "4a9551df-5dec-4410-90bb-43d17d722918")],
+        )
         
-        return JsonResponse({
-            "success": True,
-            "message": "파일 파싱 성공!",
-            "extracted_text": extracted_text[:1000]  # 앞부분 1000자 미리보기
-        })
+        retrieved_data_for_RAG = []
+        for index, row in results[0].iterrows():
+            retrieved_data_for_RAG.append(row["text"])
+
+        question = "You will answer this question based on the provided reference material: " + query
+        messages = "Here is the provided context: " + "\n"
+        if results:
+            for data in retrieved_data_for_RAG:
+                messages += data + "\n"
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": question},
+                {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": messages},
+                ],
+                }
+            ],
+            # max_tokens=300,
+        )
+        content = response.choices[0].message.content
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "파일 파싱 성공!",
+                "extracted_text": content[:1000],  # 앞부분 1000자 미리보기
+            }
+        )
     except UploadedFile.DoesNotExist:
         return JsonResponse({"success": False, "error": "파일을 찾을 수 없습니다."})
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
+    # except Exception as e:
+    #     return JsonResponse({"success": False, "error": str(e)})
