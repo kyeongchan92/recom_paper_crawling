@@ -9,6 +9,13 @@ from ref_graph.form import FileUploadForm
 
 from django.shortcuts import render, redirect
 
+from django.http import JsonResponse
+from llama_index.readers.file import PDFReader  # PDF 파일을 읽기 위한 리더
+from openai import OpenAI
+
+client = OpenAI()
+rag_parser = RagParser()
+
 papers = {
     1: {
         "Title": "Language models are few-shot learners",
@@ -222,16 +229,7 @@ def file_upload_view(request):
     return render(request, "file_upload.html", {"form": form})
 
 
-from django.http import JsonResponse
-from llama_index.readers.file import PDFReader  # PDF 파일을 읽기 위한 리더
-
-rag_parser = RagParser()
-from openai import OpenAI
-
-client = OpenAI()
-
-
-def parse_file_view(request, file_id):
+def peper_parse_file_view(request, file_id):
     try:
         file_instance = UploadedFile.objects.get(id=file_id)
         file_path = os.path.join(settings.MEDIA_ROOT, file_instance.file.name)
@@ -250,12 +248,15 @@ def parse_file_view(request, file_id):
             n=5,
             filter=[("<>", "document_id", "4a9551df-5dec-4410-90bb-43d17d722918")],
         )
-        
+
         retrieved_data_for_RAG = []
         for index, row in results[0].iterrows():
             retrieved_data_for_RAG.append(row["text"])
 
-        question = "You will answer this question based on the provided reference material: " + query
+        question = (
+            "You will answer this question based on the provided reference material: "
+            + query
+        )
         messages = "Here is the provided context: " + "\n"
         if results:
             for data in retrieved_data_for_RAG:
@@ -265,11 +266,11 @@ def parse_file_view(request, file_id):
             messages=[
                 {"role": "system", "content": question},
                 {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": messages},
-                ],
-                }
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": messages},
+                    ],
+                },
             ],
             # max_tokens=300,
         )
@@ -279,6 +280,7 @@ def parse_file_view(request, file_id):
             {
                 "success": True,
                 "message": "파일 파싱 성공!",
+                "file_id": file_id,
                 "extracted_text": content[:1000],  # 앞부분 1000자 미리보기
             }
         )

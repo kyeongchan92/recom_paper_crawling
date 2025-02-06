@@ -17,7 +17,9 @@
     <button type="submit">업로드</button>
   </form>
 
-  <button id="parse-btn" style="display:none;">파싱 시작</button>
+  <button id="paper-parse-btn" style="display:none;">논문 파싱 시작</button>
+  <button id="ref-parse-btn" style="display:none;">Reference 파싱 시작</button>
+
   <pre id="parsed-output"></pre>
 
   <!-- Django에서 전달한 JSON 데이터를 먼저 로드 -->
@@ -36,7 +38,7 @@
 
     let formData = new FormData();
     let fileInput = document.getElementById("file-input");
-    let parseButton = document.getElementById("parse-btn");  // 파싱 버튼 선택
+    let paperParseButton = document.getElementById("paper-parse-btn");  // 파싱 버튼 선택
 
     if (fileInput.files.length === 0) {
       alert("파일을 선택하세요!");
@@ -63,10 +65,10 @@
           alert("파일 업로드 성공!\n업로드된 파일: " + data.file_url);
 
           // ✅ "파싱 시작" 버튼 보이기
-          parseButton.style.display = "block";
+          paperParseButton.style.display = "block";
 
           // ✅ 파일 ID를 버튼에 저장하여 이후 클릭 시 사용할 수 있도록 함
-          parseButton.dataset.fileId = data.file_id;
+          paperParseButton.dataset.fileId = data.file_id;
         } else {
           alert("파일 업로드 실패! " + JSON.stringify(data.errors));
         }
@@ -76,8 +78,36 @@
       });
   });
 
-  document.getElementById("parse-btn").addEventListener("click", function () {
+  document.getElementById("paper-parse-btn").addEventListener("click", function () {
     let fileId = this.dataset.fileId;  // ✅ 저장된 file_id 가져오기
+    let RefParseButton = document.getElementById("ref-parse-btn");  // 파싱 버튼 선택
+
+    if (!fileId) {
+      alert("파일을 업로드한 후 파싱을 시작하세요!");
+      return;
+    }
+
+    fetch(`/paper_parse/${fileId}/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("parsed-output").textContent = data.extracted_text;
+
+          RefParseButton.style.display = "block";
+          RefParseButton.dataset.fileId = data.file_id;
+
+        } else {
+          alert("파일 파싱 실패!");
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+  });
+
+
+  document.getElementById("ref-parse-btn").addEventListener("click", function () {
+    let fileId = this.dataset.fileId;
 
     if (!fileId) {
       alert("파일을 업로드한 후 파싱을 시작하세요!");

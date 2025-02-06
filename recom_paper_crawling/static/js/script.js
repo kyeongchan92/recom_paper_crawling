@@ -81,11 +81,19 @@ const circle_tags = svg.selectAll("circle")
   .attr("fill", "skyblue")
   .attr("stroke", "#333")
   .attr("stroke-width", 1.5)
-  .on("mouseover", function () {
+  .on("mouseover", function (event, d) {
     d3.select(this).attr("fill", "#ff4500");
+
+    title_texts
+    .filter(textData => textData.id === d.id)
+    .attr("opacity", "1"); // 제목의 투명도를 1로 변경
   })
-  .on("mouseout", function () {
+  .on("mouseout", function (event, d) {
     d3.select(this).attr("fill", "skyblue");
+
+    title_texts
+    .filter(textData => textData.id === d.id)
+    .attr("opacity", "0.3"); // 다시 원래대로 투명도 조정
   })
   .call(d3.drag()
     .on("start", dragStarted)
@@ -99,7 +107,8 @@ const title_texts = svg.selectAll(".title-text")  // ✅ 클래스 추가
   .append("text")
   .classed("title-text", true)  // ✅ 클래스 부여
   .text(d => d.id)
-  .attr("dx", d => d.size / 10);
+  .attr("dx", d => d.size / 10)
+  .attr("opacity", "0.2");
 
 const citation_count_texts = svg.selectAll(".citation-text")  // ✅ 다른 클래스 사용
   .data(nodes)
