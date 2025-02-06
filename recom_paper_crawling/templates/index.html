@@ -21,6 +21,7 @@
   <button id="ref-parse-btn" style="display:none;">Reference 파싱 시작</button>
 
   <pre id="parsed-output"></pre>
+  <pre id="parsed-output-ref"></pre>
 
   <!-- Django에서 전달한 JSON 데이터를 먼저 로드 -->
   <script id="papers-data" type="application/json">
@@ -114,11 +115,11 @@
       return;
     }
 
-    fetch(`/parse/${fileId}/`)
+    fetch(`/reference_parse/`)
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          document.getElementById("parsed-output").textContent = data.extracted_text;
+          document.getElementById("parsed-output-ref").textContent = data.source_dict.from_paper.title;
         } else {
           alert("파일 파싱 실패!");
         }

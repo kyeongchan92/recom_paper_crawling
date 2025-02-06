@@ -133,3 +133,51 @@ class RagParser:
         content = response.choices[0].message.content
         return content
 
+
+
+
+def embed_query(query, client):
+    query_embedding = client.embeddings.create(
+        input=query, model="text-embedding-3-small"
+    )
+    return query_embedding.data[0].embedding
+
+
+def retrieve_data(query, table, client):
+    query_embedding = embed_query(query, client)
+    results = table.search(
+        vectors={"flat": [query_embedding]},
+        n=5,
+        filter=[("<>", "document_id", "4a9551df-5dec-4410-90bb-43d17d722918")],
+    )
+    retrieved_data_for_RAG = []
+    for index, row in results[0].iterrows():
+        retrieved_data_for_RAG.append(row["text"])
+    return retrieved_data_for_RAG
+
+
+def RAG(query, table, client):
+    question = (
+        "You will answer this question based on the provided reference material: "
+        + query
+    )
+    messages = "Here is the provided context: " + "\n"
+    results = retrieve_data(query, table, client)
+    if results:
+        for data in results:
+            messages += data + "\n"
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": question},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": messages},
+                ],
+            },
+        ],
+        # max_tokens=300,
+    )
+    content = response.choices[0].message.content
+    return content

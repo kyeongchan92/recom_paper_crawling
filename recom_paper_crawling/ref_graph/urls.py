@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('upload/', views.file_upload_view, name='file_upload'),
     path("paper_parse/<int:file_id>/", views.peper_parse_file_view, name="parse_file"),
+    path('reference_parse/', views.reference_parse, name='reference_parse'),
 ]
 
 from django.conf import settings

@@ -3,7 +3,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from ref_graph.kdb_rag.rag_parser import RagParser
+from ref_graph.kdb_rag.rag_parser import RAG, RagParser
 from ref_graph.models import UploadedFile
 from ref_graph.form import FileUploadForm
 
@@ -288,3 +288,30 @@ def peper_parse_file_view(request, file_id):
         return JsonResponse({"success": False, "error": "파일을 찾을 수 없습니다."})
     # except Exception as e:
     #     return JsonResponse({"success": False, "error": str(e)})
+
+
+def reference_parse(request):
+    KDBAI_TABLE_NAME = "LlamaParse_Table"
+    table = rag_parser.db.table(KDBAI_TABLE_NAME)  # 기존 테이블 가져오기
+
+    client = OpenAI()
+
+    source_paper_answer = RAG(
+        f"""Find this paper's title, authors like example.
+
+EXAMPLE : 
+{{
+    "from_paper : 
+                    {{
+                        "title" : "Language models are few-shot learners",
+                        "authors" : "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al",
+                    }}
+}}
+
+""",
+        table,
+        client,
+    )
+    source_dict = eval(source_paper_answer.replace("```json", "").replace("```", ""))
+    print(f"source_dict : \n{source_dict}")
+    return JsonResponse({"success": True, 'source_dict': source_dict})
