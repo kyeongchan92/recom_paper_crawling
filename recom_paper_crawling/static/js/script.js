@@ -138,6 +138,7 @@ function dragged(event, d) {
 
 function dragEnded(event, d) {
   if (!event.active) simulation.alphaTarget(0);
-  d.fx = d.x;
-  d.fy = d.y;
+  d.fx = null;  // ✅ 드래그 끝나면 위치 고정을 해제
+  d.fy = null;
 }
+
