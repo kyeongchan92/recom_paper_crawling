@@ -65,14 +65,12 @@ let circle_tags = svg.selectAll("circle")
   .attr("stroke-width", 1.5)
   .on("mouseover", function (event, d) {
     d3.select(this).attr("fill", "#ff4500");
-
     title_texts
       .filter(textData => textData.id === d.id)
       .attr("opacity", "1"); // 제목의 투명도를 1로 변경
   })
   .on("mouseout", function (event, d) {
     d3.select(this).attr("fill", "skyblue");
-
     title_texts
       .filter(textData => textData.id === d.id)
       .attr("opacity", "0.3"); // 다시 원래대로 투명도 조정
@@ -83,7 +81,7 @@ let circle_tags = svg.selectAll("circle")
     .on("end", dragEnded)
   );
 
-  let title_texts = svg.selectAll(".title-text")  // ✅ 클래스 추가
+let title_texts = svg.selectAll(".title-text")  // ✅ 클래스 추가
   .data(nodes)
   .enter()
   .append("text")
@@ -92,7 +90,7 @@ let circle_tags = svg.selectAll("circle")
   .attr("dx", d => d.size / 10)
   .attr("opacity", "0.2");
 
-  let citation_count_texts = svg.selectAll(".citation-text")  // ✅ 다른 클래스 사용
+let citation_count_texts = svg.selectAll(".citation-text")  // ✅ 다른 클래스 사용
   .data(nodes)
   .enter()
   .append("text")
@@ -103,27 +101,25 @@ let circle_tags = svg.selectAll("circle")
   .attr("text-anchor", "middle")
   .attr("dy", d => d.size / 20);; // 크기를 원 크기에 비례하게 설정
 
-
-const simulation = d3.forceSimulation(nodes)
+let simulation = d3.forceSimulation(nodes)
   .force("charge", d3.forceManyBody().strength(0))
   .force("center", d3.forceCenter(width / 2, height / 2))
   .force("collision", d3.forceCollide(d => radiusScale(d.citationCount) + 5))
   .on("tick", ticked);
 
-  function ticked() {
-    circle_tags
-        .attr("cx", d => d.x || Math.random() * width)  // ✅ 수정 (NaN 방지)
-        .attr("cy", d => d.y || Math.random() * height);  // ✅ 수정 (NaN 방지)
+function ticked() {
+  circle_tags
+    .attr("cx", d => d.x || Math.random() * width)  // ✅ 수정 (NaN 방지)
+    .attr("cy", d => d.y || Math.random() * height);  // ✅ 수정 (NaN 방지)
 
-    title_texts
-        .attr("x", d => d.x || Math.random() * width)  // ✅ 수정 (NaN 방지)
-        .attr("y", d => (d.y || Math.random() * height) + 20);  // ✅ 수정 (NaN 방지)
+  title_texts
+    .attr("x", d => d.x || Math.random() * width)  // ✅ 수정 (NaN 방지)
+    .attr("y", d => (d.y || Math.random() * height) + 20);  // ✅ 수정 (NaN 방지)
 
-    citation_count_texts
-        .attr("x", d => d.x || Math.random() * width)  // ✅ 수정 (NaN 방지)
-        .attr("y", d => (d.y || Math.random() * height) + 4);  // ✅ 수정 (NaN 방지)
+  citation_count_texts
+    .attr("x", d => d.x || Math.random() * width)  // ✅ 수정 (NaN 방지)
+    .attr("y", d => (d.y || Math.random() * height) + 4);  // ✅ 수정 (NaN 방지)
 }
-
 
 function dragStarted(event, d) {
   if (!event.active) simulation.alphaTarget(0.3).restart();

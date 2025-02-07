@@ -36,7 +36,7 @@
 </body>
 <script>
 
-  document.getElementById("rearrange-btn").addEventListener("click", rearrangeNodes);
+  // document.getElementById("rearrange-btn").addEventListener("click", rearrangeNodes);
 
   document.getElementById("upload-form").addEventListener("submit", function (event) {
     event.preventDefault();  // 기본 제출 동작 방지
@@ -110,8 +110,8 @@
       });
   });
 
-
   document.getElementById("ref-parse-btn").addEventListener("click", async function () {
+    console.log("Reference 파싱 시작 버튼 눌림")
     let fileId = this.dataset.fileId;
 
     if (!fileId) {
@@ -160,96 +160,63 @@
     }
   });
 
-
   function addNode(newPaper) {
-    console.log(`📌 새로운 논문 추가: ${newPaper.title}`);
-
-    // 새 노드 추가
-    const newNode = {
+    let newNode = {
       id: newPaper.title,
       size: Math.max(10, Math.log(newPaper.citationCount + 1) * 10),
       citationCount: newPaper.citationCount,
-      year: newPaper.year,
-      x: Math.random() * width,  // ✅ 수정 (랜덤 위치 추가)
-      y: Math.random() * height  // ✅ 수정 (랜덤 위치 추가)
+      year: newPaper.year
     };
+
     nodes.push(newNode);
 
-    // 새로운 노드를 D3에 추가
-    circle_tags = svg.selectAll("circle")
-      .data(nodes)
-      .enter()
-      .append("circle")
-      .attr("r", d => radiusScale(d.citationCount) + 5)
-      .attr("fill", "skyblue")
+    let newCircle = svg.append("circle")
+      .datum(newNode)
+      .attr("r", radiusScale(newNode.citationCount) + 5)
+      .attr("fill", "orange")
       .attr("stroke", "#333")
       .attr("stroke-width", 1.5)
       .on("mouseover", function (event, d) {
         d3.select(this).attr("fill", "#ff4500");
-        title_texts.filter(textData => textData.id === d.id).attr("opacity", "1");
+        title_texts
+          .filter(textData => textData.id === d.id)
+          .attr("opacity", "1");
       })
       .on("mouseout", function (event, d) {
-        d3.select(this).attr("fill", "skyblue");
-        title_texts.filter(textData => textData.id === d.id).attr("opacity", "0.3");
+        d3.select(this).attr("fill", "orange");
+        title_texts
+          .filter(textData => textData.id === d.id)
+          .attr("opacity", "0.3");
       })
-      .call(d3.drag().on("start", dragStarted).on("drag", dragged).on("end", dragEnded))
-      .transition()  // ✅ 애니메이션 효과
-        .delay(500)  // 0.5초 후 시작
-        .duration(2000)  // 2초 동안 색상 변경
-        .attr("fill", "skyblue");  // ✅ 최종 색상: skyblue
-    title_texts = svg.selectAll(".title-text")
-      .data(nodes)
-      .enter()
-      .append("text")
+      .call(d3.drag()
+        .on("start", dragStarted)
+        .on("drag", dragged)
+        .on("end", dragEnded)
+      );
+
+    let newTitle = svg.append("text")
+      .datum(newNode)
       .classed("title-text", true)
-      .text(d => d.id)
-      .attr("dx", d => d.size / 10)
+      .text(newNode.id)
+      .attr("dx", newNode.size / 10)
       .attr("opacity", "0.2");
 
-    citation_count_texts = svg.selectAll(".citation-text")
-      .data(nodes)
-      .enter()
-      .append("text")
+    let newCitationText = svg.append("text")
+      .datum(newNode)
       .classed("citation-text", true)
-      .text(d => `${d.citationCount.toLocaleString()}`)
+      .text(`${newNode.citationCount.toLocaleString()}`)
       .attr("fill", "white")
-      .attr("font-size", d => Math.max(8, d.size / 3))
+      .attr("font-size", Math.max(8, newNode.size / 3))
       .attr("text-anchor", "middle")
-      .attr("dy", d => d.size / 20);
+      .attr("dy", newNode.size / 20);
 
-    // D3.js 시뮬레이션 업데이트
-    simulation
-      .nodes(nodes)
-      .force("charge", d3.forceManyBody().strength(-50))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(d => radiusScale(d.citationCount) + 5))
-      .alpha(1)
-      .restart();
+    circle_tags = svg.selectAll("circle");
+    title_texts = svg.selectAll(".title-text");
+    citation_count_texts = svg.selectAll(".citation-text");
 
-    rearrangeNodes();  // ✅ 새 노드 추가 후 자동 재정렬
+    simulation.nodes(nodes);
+    simulation.alpha(0.5).restart();
   }
-
-  function rearrangeNodes() {
-    console.log("📌 노드 재정렬 실행");
-
-    // ✅ 모든 노드의 fx, fy 해제 + 중앙 정렬을 유도하기 위해 x, y 값을 조정
-    nodes.forEach(node => {
-        node.fx = null;
-        node.fy = null;
-        node.x = width / 2 + (Math.random() * 100 - 50);  // ✅ 중앙에서 약간의 랜덤 위치 조정
-        node.y = height / 2 + (Math.random() * 100 - 50); // ✅ 중앙에서 약간의 랜덤 위치 조정
-    });
-
-    simulation
-    .force("charge", d3.forceManyBody().strength(5))  // ✅ 중앙으로 더 모이도록 조정
-
-        .force("center", d3.forceCenter(width / 2, height / 2))  // 중심 정렬
-        .force("collision", d3.forceCollide().radius(d => radiusScale(d.citationCount) + 10))  // 충돌 방지 (반영 강화)
-        .alphaTarget(1)  // ✅ 강한 재정렬 효과 적용
-        .restart();
-}
-
-
 
 </script>
 
