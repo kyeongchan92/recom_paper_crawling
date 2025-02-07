@@ -107,7 +107,7 @@
   });
 
 
-  document.getElementById("ref-parse-btn").addEventListener("click", function () {
+  document.getElementById("ref-parse-btn").addEventListener("click", async function () {
     let fileId = this.dataset.fileId;
 
     if (!fileId) {
@@ -115,18 +115,32 @@
       return;
     }
 
-    fetch(`/reference_parse/`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById("parsed-output-ref").textContent = data.source_dict.from_paper.title;
-        } else {
-          alert("파일 파싱 실패!");
-        }
-      })
-      .catch(error => {
-        console.error("Error:", error);
-      });
+    try {
+      // source_parse reference_parse를 동시에 실행
+      const [sourceParseResponse, refParseResponse] = await Promise.all([
+        fetch(`/source_parse/`).then(res => res.json()),
+        fetch(`/reference_parse/`).then(res => res.json())
+      ]);
+
+      // 화면에 source_dict 결과 표시
+      if (sourceParseResponse.success) {
+        document.getElementById("parsed-output-ref").textContent = sourceParseResponse.source_dict.from_paper.title;
+      } else {
+        alert("파일 파싱 실패!");
+      }
+
+      // reference_parse의 결과 확인
+      if (refParseResponse.success) {
+        console.log("Reference parsing continued successfully.");
+      } else {
+        console.error("Reference parsing failed:", refParseResponse.error);
+      }
+
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+
   });
 </script>
 

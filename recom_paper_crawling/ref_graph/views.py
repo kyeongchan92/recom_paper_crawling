@@ -290,7 +290,8 @@ def peper_parse_file_view(request, file_id):
     #     return JsonResponse({"success": False, "error": str(e)})
 
 
-def reference_parse(request):
+def source_parse(request):
+    print(f"source_parse".ljust(60, '-'))
     KDBAI_TABLE_NAME = "LlamaParse_Table"
     table = rag_parser.db.table(KDBAI_TABLE_NAME)  # 기존 테이블 가져오기
 
@@ -307,11 +308,48 @@ EXAMPLE :
                         "authors" : "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al",
                     }}
 }}
-
 """,
         table,
         client,
     )
     source_dict = eval(source_paper_answer.replace("```json", "").replace("```", ""))
+    
+    
+    
     print(f"source_dict : \n{source_dict}")
-    return JsonResponse({"success": True, 'source_dict': source_dict})
+    return JsonResponse({"success": True, "source_dict": source_dict})
+
+
+def reference_parse(request):
+    print(f"[reference_parse]".ljust(60, '-'))
+    KDBAI_TABLE_NAME = "LlamaParse_Table"
+    table = rag_parser.db.table(KDBAI_TABLE_NAME)  # 기존 테이블 가져오기
+
+    client = OpenAI()
+    print(f"[reference_parse] RAG ing..")
+    ref_parse_answer = RAG(
+        f"""Find this paper's References. Give me that References with the given json form. Don't return any other comments except that References
+
+EXAMPLE : 
+{{
+    1 : {{
+            "from_paper : 
+                            {{
+                                "title" : "Language models are few-shot learners",
+                                "authors" : "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al",
+                                "source" : "Advances in neural information processing systems 33 (2020), 1877–1901",
+                                "year" : 2020
+                            }}
+    }},
+    2 : {{
+        ...
+    }},
+    ...
+}}
+""",
+        table,
+        client,
+    )
+    ref_dict = eval(ref_parse_answer.replace("```json", "").replace("```", ""))
+    print(f"ref_dict : \n{ref_dict}")
+    return JsonResponse({"success": True, "source_dict": ref_dict})
