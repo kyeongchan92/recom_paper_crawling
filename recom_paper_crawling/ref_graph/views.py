@@ -1,9 +1,14 @@
 import json
+import time
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 
 from neo4j_client import neo4j_client
+from ref_graph.citation.get_citation import (
+    get_citation_count_using_request,
+    get_citation_count_using_scholarly,
+)
 from ref_graph.kdb_rag.rag_parser import RAG, RagParser
 from ref_graph.models import UploadedFile
 from ref_graph.form import FileUploadForm
@@ -325,6 +330,7 @@ EXAMPLE :
 
     return JsonResponse({"success": True, "source_dict": source_dict})
 
+
 @csrf_exempt
 def reference_parse(request):
     print(f"[reference_parse]".ljust(60, "-"))
@@ -333,29 +339,138 @@ def reference_parse(request):
 
     client = OpenAI()
     print(f"[reference_parse] RAG ing..")
-    ref_parse_answer = RAG(
-        f"""Find this paper's References. Give me that References with the given json form. Don't return any other comments except that References
 
-EXAMPLE : 
-{{
-    1 : {{
-            "from_paper : 
-                            {{
-                                "title" : "Language models are few-shot learners",
-                                "authors" : "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al",
-                                "source" : "Advances in neural information processing systems 33 (2020), 1877–1901",
-                                "year" : 2020
-                            }}
-    }},
-    2 : {{
-        ...
-    }},
-    ...
-}}
-""",
-        table,
-        client,
+    def stream_references():
+        #     ref_parse_answer = RAG(
+        #         f"""Find this paper's References. Give me that References with the given json form. Don't return any other comments except that References
+
+        # EXAMPLE :
+        # {{
+        #     1 : {{
+        #             "from_paper :
+        #                             {{
+        #                                 "title" : "Language models are few-shot learners",
+        #                                 "authors" : "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al",
+        #                                 "source" : "Advances in neural information processing systems 33 (2020), 1877–1901",
+        #                                 "year" : 2020
+        #                             }}
+        #     }},
+        #     2 : {{
+        #         ...
+        #     }},
+        #     ...
+        # }}
+        # """,
+        #         table,
+        #         client,
+        #     )
+        #     ref_dict = eval(ref_parse_answer.replace("```json", "").replace("```", ""))
+
+        ref_dict = {
+            1: {
+                "from_paper": {
+                    "title": "Language models are few-shot learners",
+                    "authors": "Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al.",
+                    "source": "Advances in neural information processing systems 33 (2020), 1877–1901",
+                    "year": 2020,
+                },
+                "from_scholarly": {
+                    "title": "Language models are few-shot learners",
+                    "authors": "T Brown, B Mann, N Ryder",
+                    "citation_count": {"value": 39745, "date": "2025-02-07 17:09:12"},
+                },
+            },
+            2: {
+                "from_paper": {
+                    "title": "Trends in distributed artificial intelligence",
+                    "authors": "Brahim Chaib-Draa, Bernard Moulin, René Mandiau, and Patrick Millot",
+                    "source": "Artificial Intelligence Review 6 (1992), 35–66",
+                    "year": 1992,
+                },
+                "from_request": {
+                    "title": "Trends in distributed artificial intelligence",
+                    "authors": "B Chaib-Draa, B Moulin, R Mandiau, P Millot",
+                    "citation_count": {"value": 282, "date": "2025-02-07 17:09:18"},
+                },
+            },
+            3: {
+                "from_paper": {
+                    "title": "Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents",
+                    "authors": "Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chen Qian, Chi-Min Chan, Yujia Qin, Yaxi Lu, Ruobing Xie, et al.",
+                    "source": "arXiv preprint arXiv:2308.10848 (2023)",
+                    "year": 2023,
+                },
+                "from_scholarly": {
+                    "title": "Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents",
+                    "authors": "W Chen, Y Su, J Zuo, C Yang",
+                    "citation_count": {"value": 159, "date": "2025-02-07 17:09:21"},
+                },
+            },
+            4: {
+                "from_paper": {
+                    "title": "Improving Factuality and Reasoning in Language Models through Multiagent Debate",
+                    "authors": "Yilun Du, Shuang Li, Antonio Torralba, Joshua B Tenenbaum, and Igor Mordatch",
+                    "source": "arXiv preprint arXiv:2305.14325 (2023)",
+                    "year": 2023,
+                },
+                "from_scholarly": {
+                    "title": "Improving factuality and reasoning in language models through multiagent debate",
+                    "authors": "Y Du, S Li, A Torralba, JB Tenenbaum",
+                    "citation_count": {"value": 460, "date": "2025-02-07 17:09:24"},
+                },
+            },
+        }
+
+        print(f"ref_dict 추출 완료")
+
+        # 🔹 실시간으로 데이터 응답 (스트리밍)
+        for i, one_ref_info in ref_dict.items():
+            # ref_paper_title = one_ref_info["from_paper"]["title"]
+            # ref_paper_authors = one_ref_info["from_paper"]["authors"]
+            # ref_paper_source = one_ref_info["from_paper"]["source"]
+
+            # print(f"{i}/{len(ref_dict)}".ljust(120, "-"))
+            # print(f"ref_paper_title : {ref_paper_title}")
+            # print(f"ref_paper_authors : {ref_paper_authors}")
+            # print(f"ref_paper_source : {ref_paper_source}")
+
+            # scholary_result = get_citation_count_using_scholarly(
+            #     ref_paper_title, ref_paper_authors, ref_paper_source
+            # )
+
+            # if scholary_result is not None:
+            #     ref_dict[i]["from_scholarly"] = scholary_result
+            # else:
+            #     request_result = get_citation_count_using_request(
+            #         ref_paper_title, ref_paper_authors
+            #     )
+            #     if request_result is not None:
+            #         ref_dict[i]["from_request"] = request_result
+            # if "from_scholarly" in ref_dict[i]:
+            #     print(f"from_scholarly : ")
+            #     print(ref_dict[i]["from_scholarly"])
+            # if "from_request" in ref_dict[i]:
+            #     print(f"from_request : ")
+            #     print(ref_dict[i]["from_request"])
+
+            if (
+                "from_scholarly" in one_ref_info
+                and one_ref_info["from_scholarly"].get("citation_count", {}).get("value")
+                is not None
+            ) or (
+                "from_request" in one_ref_info
+                and one_ref_info["from_request"].get("citation_count", {}).get("value")
+                is not None
+            ):
+                json_data = json.dumps({"one_ref_info": one_ref_info})
+                print(f"✅ 전송할 데이터: {json_data}")
+                yield f"data: {json_data}\n\n"
+                time.sleep(1)  # 🔹 JS에서 차례로 추가되도록 살짝 지연
+
+    response = StreamingHttpResponse(
+        stream_references(), content_type="text/event-stream"
     )
-    ref_dict = eval(ref_parse_answer.replace("```json", "").replace("```", ""))
-    print(f"ref_dict : \n{ref_dict}")
-    return JsonResponse({"success": True, "source_dict": ref_dict})
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"  # Nginx 사용 시 버퍼링 방지
+    return response
+    # return JsonResponse({"success": True, "source_dict": ref_dict})

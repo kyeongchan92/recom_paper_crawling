@@ -140,20 +140,45 @@
       console.log(`newPaper: ${newPaper}`);
       addNode(newPaper);  // 새 노드 추가
 
-      // // 🔹 2️⃣ 참조 논문(ref_dict) 가져오기
-      // const refResponse = await fetch(`/reference_parse/`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" }
-      // });
-      // const refData = await refResponse.json();
+      // 🔹 2️⃣ 참조 논문(ref_dict) 가져오기 (EventSource 사용)
+      console.log("✅ EventSource를 통해 참조 논문 스트리밍 시작");
 
-      // if (!refData.success) {
-      //   alert("참조 논문 가져오기 실패!");
-      //   return;
-      // }
+      if (window.eventSource) {
+        window.eventSource.close();  // 기존 연결이 있으면 닫기
+      }
 
-      // const refDict = refData.source_dict;
-      // console.log(`✅ 참조 논문 개수: ${Object.keys(refDict).length}`);
+      window.eventSource = new EventSource(`/reference_parse/`);
+
+      window.eventSource.onmessage = function (event) {
+        try {
+          let data = JSON.parse(event.data);
+          console.log("data", data)
+          if (data.one_ref_info) {
+            console.log("✅ 새 논문 추가: ", data.one_ref_info);
+
+            let paper = data.one_ref_info.from_paper;
+            let citation = data.one_ref_info.from_scholarly?.citation_count?.value 
+            || data.one_ref_info.from_request?.citation_count?.value;
+
+            let newPaper = {
+              title: paper.title,
+              citationCount: citation,
+              year: paper.year
+            };
+
+            console.log("newPaper", newPaper)
+
+            addNode(newPaper);  // 🔥 즉시 그래프에 반영
+          }
+        } catch (error) {
+          console.error("JSON 파싱 오류:", error);
+        }
+      };
+
+      window.eventSource.onerror = function () {
+        console.log("❌ 서버 연결 종료");
+        window.eventSource.close();
+      };
 
     } catch (error) {
       console.error("Error:", error);
@@ -169,6 +194,8 @@
       x: width / 2,  // 화면 중앙에 배치
       y: height / 2
     };
+
+    console.log("newNode", newNode)
 
     nodes.push(newNode);
 
