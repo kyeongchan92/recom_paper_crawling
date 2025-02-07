@@ -18,9 +18,8 @@
   </form>
 
   <button id="paper-parse-btn" style="display:none;">논문 파싱 시작</button>
-  <button id="ref-parse-btn" style="display:none;">Reference 파싱 시작</button>
-
   <pre id="parsed-output"></pre>
+  <button id="ref-parse-btn" style="display:none;">Reference 파싱 시작</button>
   <pre id="parsed-output-ref"></pre>
 
   <!-- Django에서 전달한 JSON 데이터를 먼저 로드 -->
@@ -116,32 +115,110 @@
     }
 
     try {
-      // source_parse reference_parse를 동시에 실행
-      const [sourceParseResponse, refParseResponse] = await Promise.all([
-        fetch(`/source_parse/`).then(res => res.json()),
-        fetch(`/reference_parse/`).then(res => res.json())
-      ]);
+      // 🔹 1️⃣ 먼저 소스 논문(source_dict) 추가
+      const sourceResponse = await fetch(`/source_parse/`);
+      const sourceData = await sourceResponse.json();
 
-      // 화면에 source_dict 결과 표시
-      if (sourceParseResponse.success) {
-        document.getElementById("parsed-output-ref").textContent = sourceParseResponse.source_dict.from_paper.title;
-      } else {
-        alert("파일 파싱 실패!");
+      if (!sourceData.success) {
+        alert("소스 논문 추가 실패!");
+        return;
       }
 
-      // reference_parse의 결과 확인
-      if (refParseResponse.success) {
-        console.log("Reference parsing continued successfully.");
-      } else {
-        console.error("Reference parsing failed:", refParseResponse.error);
-      }
+      const sourceTitle = sourceData.source_dict.from_paper.title;
+      console.log(`✅ 소스 논문 추가 완료: ${sourceTitle}`);
+
+      const newPaper = {
+        title: sourceData.source_dict.from_paper.title,
+        citationCount: Math.floor(Math.random() * 50), // 임시 citationCount (실제 데이터가 필요함)
+        year: new Date().getFullYear()  // 현재 연도
+      };
+      console.log(`newPaper: ${newPaper}`);
+      addNode(newPaper);  // 새 노드 추가
+
+      // // 🔹 2️⃣ 참조 논문(ref_dict) 가져오기
+      // const refResponse = await fetch(`/reference_parse/`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" }
+      // });
+      // const refData = await refResponse.json();
+
+      // if (!refData.success) {
+      //   alert("참조 논문 가져오기 실패!");
+      //   return;
+      // }
+
+      // const refDict = refData.source_dict;
+      // console.log(`✅ 참조 논문 개수: ${Object.keys(refDict).length}`);
 
     } catch (error) {
       console.error("Error:", error);
     }
-
-
   });
+
+
+  function addNode(newPaper) {
+    console.log(`📌 새로운 논문 추가: ${newPaper.title}`);
+
+    // 새 노드 추가
+    const newNode = {
+      id: newPaper.title,
+      size: Math.max(10, Math.log(newPaper.citationCount + 1) * 10),
+      citationCount: newPaper.citationCount,
+      year: newPaper.year,
+      x: Math.random() * width,  // ✅ 수정 (랜덤 위치 추가)
+      y: Math.random() * height  // ✅ 수정 (랜덤 위치 추가)
+    };
+    nodes.push(newNode);
+
+    // 새로운 노드를 D3에 추가
+    circle_tags = svg.selectAll("circle")
+      .data(nodes)
+      .enter()
+      .append("circle")
+      .attr("r", d => radiusScale(d.citationCount) + 5)
+      .attr("fill", "skyblue")
+      .attr("stroke", "#333")
+      .attr("stroke-width", 1.5)
+      .on("mouseover", function (event, d) {
+        d3.select(this).attr("fill", "#ff4500");
+        title_texts.filter(textData => textData.id === d.id).attr("opacity", "1");
+      })
+      .on("mouseout", function (event, d) {
+        d3.select(this).attr("fill", "skyblue");
+        title_texts.filter(textData => textData.id === d.id).attr("opacity", "0.3");
+      })
+      .call(d3.drag().on("start", dragStarted).on("drag", dragged).on("end", dragEnded));
+
+    title_texts = svg.selectAll(".title-text")
+      .data(nodes)
+      .enter()
+      .append("text")
+      .classed("title-text", true)
+      .text(d => d.id)
+      .attr("dx", d => d.size / 10)
+      .attr("opacity", "0.2");
+
+    citation_count_texts = svg.selectAll(".citation-text")
+      .data(nodes)
+      .enter()
+      .append("text")
+      .classed("citation-text", true)
+      .text(d => `${d.citationCount.toLocaleString()}`)
+      .attr("fill", "white")
+      .attr("font-size", d => Math.max(8, d.size / 3))
+      .attr("text-anchor", "middle")
+      .attr("dy", d => d.size / 20);
+
+    // D3.js 시뮬레이션 업데이트
+    simulation
+      .nodes(nodes)
+      .force("charge", d3.forceManyBody().strength(-50))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius(d => radiusScale(d.citationCount) + 5))
+      .alpha(1)
+      .restart();
+  }
+
 </script>
 
 </html>

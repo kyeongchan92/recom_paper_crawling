@@ -3,6 +3,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from neo4j_client import neo4j_client
 from ref_graph.kdb_rag.rag_parser import RAG, RagParser
 from ref_graph.models import UploadedFile
 from ref_graph.form import FileUploadForm
@@ -12,6 +13,7 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from llama_index.readers.file import PDFReader  # PDF 파일을 읽기 위한 리더
 from openai import OpenAI
+from django.views.decorators.csrf import csrf_exempt
 
 client = OpenAI()
 rag_parser = RagParser()
@@ -291,7 +293,7 @@ def peper_parse_file_view(request, file_id):
 
 
 def source_parse(request):
-    print(f"source_parse".ljust(60, '-'))
+    print(f"[source_parse]".ljust(60, "-"))
     KDBAI_TABLE_NAME = "LlamaParse_Table"
     table = rag_parser.db.table(KDBAI_TABLE_NAME)  # 기존 테이블 가져오기
 
@@ -313,15 +315,19 @@ EXAMPLE :
         client,
     )
     source_dict = eval(source_paper_answer.replace("```json", "").replace("```", ""))
-    
-    
-    
-    print(f"source_dict : \n{source_dict}")
+    print(f"[source_parse]source_dict : \n{source_dict}")
+
+    # 🔹 논문 데이터 추가 (중복 방지)
+    added_paper = neo4j_client.add_paper(
+        source_dict["from_paper"]["title"], source_dict["from_paper"]["authors"]
+    )
+    print("[source_parse]Added Paper:", added_paper)
+
     return JsonResponse({"success": True, "source_dict": source_dict})
 
-
+@csrf_exempt
 def reference_parse(request):
-    print(f"[reference_parse]".ljust(60, '-'))
+    print(f"[reference_parse]".ljust(60, "-"))
     KDBAI_TABLE_NAME = "LlamaParse_Table"
     table = rag_parser.db.table(KDBAI_TABLE_NAME)  # 기존 테이블 가져오기
 
