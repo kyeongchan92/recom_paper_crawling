@@ -165,7 +165,9 @@
       id: newPaper.title,
       size: Math.max(10, Math.log(newPaper.citationCount + 1) * 10),
       citationCount: newPaper.citationCount,
-      year: newPaper.year
+      year: newPaper.year,
+      x: width / 2,  // 화면 중앙에 배치
+      y: height / 2
     };
 
     nodes.push(newNode);
