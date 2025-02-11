@@ -5,10 +5,10 @@ html, body {
   overflow: hidden;
 }
 
-svg {
-  width: 100vw;
+/* svg {
+  width: 70vw;
   height: 100vh;
-}
+} */
 
 body {
   font-family: Arial, sans-serif;
@@ -41,4 +41,16 @@ body {
   font-size: 14px;
   font-weight: bold;
   fill: black;
+}
+
+#paper-list-container {
+  width: 25%;  /* 전체 화면의 25%를 차지하도록 변경 */
+  min-width: 320px;  /* 최소 너비를 설정하여 너무 좁아지지 않게 */
+  max-width: 400px;  /* 최대 너비 설정 */
+  height: 100vh;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-right: 2px solid #ddd;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);  /* 오른쪽 경계에 살짝 그림자 추가 */
 }

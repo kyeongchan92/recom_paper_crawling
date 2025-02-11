@@ -11,7 +11,7 @@
 </head>
 
 <body>
-  <button id="rearrange-btn">재정렬</button>
+  <!-- <button id="rearrange-btn">재정렬</button> -->
 
   <form id="upload-form" method="post" enctype="multipart/form-data">
     {% csrf_token %}
@@ -24,12 +24,26 @@
   <button id="ref-parse-btn" style="display:none;">Reference 파싱 시작</button>
   <pre id="parsed-output-ref"></pre>
 
+  <div style="display: flex; height: 100vh;">
+    <!-- 🔹 왼쪽 사이드바 (논문 리스트) -->
+    <div id="paper-list-container">
+      <h3>📚 Paper Nodes</h3>
+      <ul id="paper-list" style="list-style: none; padding: 0;"></ul>
+    </div>
+
+    <!-- 🔹 기존의 SVG 그래프 (우측) -->
+    <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center;">
+      <svg id="graph-svg"></svg>
+    </div>
+  </div>
+
+
   <!-- Django에서 전달한 JSON 데이터를 먼저 로드 -->
   <script id="papers-data" type="application/json">
     {{ papers_json|safe }}
   </script>
 
-  <button class="button" onclick="sortByYearAndCitation()">Sort by Year</button>
+  <!-- <button class="button" onclick="sortByYearAndCitation()">Sort by Year</button> -->
 
   <!-- script.js를 가장 마지막에 실행 -->
   <script defer src="{% static 'js/script.js' %}"></script>
@@ -157,8 +171,8 @@
             console.log("✅ 새 논문 추가: ", data.one_ref_info);
 
             let paper = data.one_ref_info.from_paper;
-            let citation = data.one_ref_info.from_scholarly?.citation_count?.value 
-            || data.one_ref_info.from_request?.citation_count?.value;
+            let citation = data.one_ref_info.from_scholarly?.citation_count?.value
+              || data.one_ref_info.from_request?.citation_count?.value;
 
             let newPaper = {
               title: paper.title,
@@ -175,8 +189,19 @@
         }
       };
 
-      window.eventSource.onerror = function () {
-        console.log("❌ 서버 연결 종료");
+      window.eventSource.onerror = function (event) {
+        let errorMessage = "❌ 서버 연결 종료";
+
+        if (event.target.readyState === EventSource.CLOSED) {
+          errorMessage += " (서버에서 연결을 닫음)";
+        } else if (event.target.readyState === EventSource.CONNECTING) {
+          errorMessage += " (다시 연결을 시도 중)";
+        } else {
+          errorMessage += ` (알 수 없는 오류)`;
+        }
+
+        console.error(errorMessage, event);
+
         window.eventSource.close();
       };
 
@@ -186,13 +211,16 @@
   });
 
   function addNode(newPaper) {
+    let citationCount = newPaper.citationCount || 1;  // 기본값 설정
+
+
     let newNode = {
       id: newPaper.title,
       size: Math.max(10, Math.log(newPaper.citationCount + 1) * 10),
       citationCount: newPaper.citationCount,
       year: newPaper.year,
-      x: width / 2,  // 화면 중앙에 배치
-      y: height / 2
+      x: (width - sidebarWidth) / 2 + Math.random() * 50 - 25,  // 중앙에서 약간의 랜덤 오프셋 추가
+      y: height / 2 + Math.random() * 50 - 25
     };
 
     console.log("newNode", newNode)
@@ -239,12 +267,48 @@
       .attr("text-anchor", "middle")
       .attr("dy", newNode.size / 20);
 
+    // 🔹 논문 리스트 UI 업데이트
+    updatePaperList(newNode);
+
     circle_tags = svg.selectAll("circle");
     title_texts = svg.selectAll(".title-text");
     citation_count_texts = svg.selectAll(".citation-text");
 
     simulation.nodes(nodes);
     simulation.alpha(0.5).restart();
+  }
+
+  function updatePaperList(newNode) {
+    let paperList = document.getElementById("paper-list");
+
+    // 기존에 같은 제목이 있는지 확인
+    let existingItem = [...paperList.children].find(li => li.dataset.id === newNode.id);
+    if (existingItem) return;  // 중복 방지
+
+    // 🔹 새 리스트 아이템 생성
+    let listItem = document.createElement("li");
+    listItem.dataset.id = newNode.id;
+    listItem.style.padding = "5px";
+    listItem.style.borderBottom = "1px solid #ddd";
+    listItem.style.cursor = "pointer";
+
+    listItem.innerHTML = `
+        <strong>${newNode.id}</strong> <br>
+        <small>📆 ${newNode.year} | 🔗 ${newNode.citationCount.toLocaleString()} citations</small>
+    `;
+
+    // 클릭하면 해당 노드로 포커스 이동
+    listItem.addEventListener("click", () => {
+      d3.selectAll("circle")
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1.5);
+
+      let selectedCircle = d3.selectAll("circle").filter(d => d.id === newNode.id);
+      selectedCircle.attr("stroke", "red").attr("stroke-width", 3);
+    });
+
+    // 리스트에 추가
+    paperList.appendChild(listItem);
   }
 
 </script>

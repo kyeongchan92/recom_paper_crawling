@@ -7,8 +7,12 @@ const papersElement = document.getElementById("papers-data");
 const papersJSON = papersElement.textContent;
 const papers = JSON.parse(papersJSON);
 
-svg = d3.select("body")
-  .append("svg")
+// svg = d3.select("body")
+//   .append("svg")
+//   .attr("width", width)
+//   .attr("height", height);
+
+svg = d3.select("svg")
   .attr("width", width)
   .attr("height", height);
 
@@ -101,9 +105,11 @@ let citation_count_texts = svg.selectAll(".citation-text")  // ✅ 다른 클래
   .attr("text-anchor", "middle")
   .attr("dy", d => d.size / 20);; // 크기를 원 크기에 비례하게 설정
 
+const sidebarWidth = document.getElementById("paper-list-container").offsetWidth;
+
 let simulation = d3.forceSimulation(nodes)
   .force("charge", d3.forceManyBody().strength(0))
-  .force("center", d3.forceCenter(width / 2, height / 2))
+  .force("center", d3.forceCenter((width - sidebarWidth) / 2, height / 2))  // ✅ 왼쪽으로 이동
   .force("collision", d3.forceCollide(d => radiusScale(d.citationCount) + 5))
   .on("tick", ticked);
 

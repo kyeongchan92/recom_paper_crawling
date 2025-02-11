@@ -236,7 +236,7 @@ def file_upload_view(request):
     return render(request, "file_upload.html", {"form": form})
 
 
-def peper_parse_file_view(request, file_id):
+def paper_parse_file_view(request, file_id):
     try:
         file_instance = UploadedFile.objects.get(id=file_id)
         file_path = os.path.join(settings.MEDIA_ROOT, file_instance.file.name)
@@ -288,7 +288,7 @@ def peper_parse_file_view(request, file_id):
                 "success": True,
                 "message": "파일 파싱 성공!",
                 "file_id": file_id,
-                "extracted_text": content[:1000],  # 앞부분 1000자 미리보기
+                "extracted_text": "Q : 이 논문의 제목이 뭐야?" + "\n" + "A : " + content[:1000],  # 앞부분 1000자 미리보기
             }
         )
     except UploadedFile.DoesNotExist:
@@ -374,10 +374,10 @@ def reference_parse(request):
                     "source": "Advances in neural information processing systems 33 (2020), 1877–1901",
                     "year": 2020,
                 },
-                "from_scholarly": {
+                "from_scholary": {
                     "title": "Language models are few-shot learners",
                     "authors": "T Brown, B Mann, N Ryder",
-                    "citation_count": {"value": 39745, "date": "2025-02-07 17:09:12"},
+                    "citation_count": {"value": 39745, "date": "2025-02-08 03:44:19"},
                 },
             },
             2: {
@@ -390,7 +390,7 @@ def reference_parse(request):
                 "from_request": {
                     "title": "Trends in distributed artificial intelligence",
                     "authors": "B Chaib-Draa, B Moulin, R Mandiau, P Millot",
-                    "citation_count": {"value": 282, "date": "2025-02-07 17:09:18"},
+                    "citation_count": {"value": 282, "date": "2025-02-08 03:44:25"},
                 },
             },
             3: {
@@ -400,10 +400,10 @@ def reference_parse(request):
                     "source": "arXiv preprint arXiv:2308.10848 (2023)",
                     "year": 2023,
                 },
-                "from_scholarly": {
+                "from_scholary": {
                     "title": "Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors in agents",
                     "authors": "W Chen, Y Su, J Zuo, C Yang",
-                    "citation_count": {"value": 159, "date": "2025-02-07 17:09:21"},
+                    "citation_count": {"value": 159, "date": "2025-02-08 03:44:27"},
                 },
             },
             4: {
@@ -413,10 +413,153 @@ def reference_parse(request):
                     "source": "arXiv preprint arXiv:2305.14325 (2023)",
                     "year": 2023,
                 },
-                "from_scholarly": {
+                "from_scholary": {
                     "title": "Improving factuality and reasoning in language models through multiagent debate",
                     "authors": "Y Du, S Li, A Torralba, JB Tenenbaum",
-                    "citation_count": {"value": 460, "date": "2025-02-07 17:09:24"},
+                    "citation_count": {"value": 460, "date": "2025-02-08 03:44:30"},
+                },
+            },
+            5: {
+                "from_paper": {
+                    "title": "Recommender ai agent: Integrating large language models for interactive recommendations",
+                    "authors": "Xu Huang, Jianxun Lian, Yuxuan Lei, Jing Yao, Defu Lian, and Xing Xie",
+                    "source": "arXiv preprint arXiv:2308.16505 (2023)",
+                    "year": 2023,
+                },
+                "from_request": {
+                    "title": "Recommender ai agent: Integrating large language models for interactive recommendations",
+                    "authors": "X Huang, J Lian, Y Lei, J Yao, D Lian, X Xie",
+                    "citation_count": {"value": 82, "date": "2025-02-08 03:44:38"},
+                },
+            },
+            6: {
+                "from_paper": {
+                    "title": "Camel: Communicative agents for 'mind' exploration of large scale language model society",
+                    "authors": "Guohao Li, Hasan Abed Al Kader Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem",
+                    "source": "arXiv preprint arXiv:2303.17760 (2023)",
+                    "year": 2023,
+                },
+                "from_scholary": {
+                    "title": 'Camel: Communicative agents for" mind" exploration of large language model society',
+                    "authors": "G Li, H Hammoud, H Itani",
+                    "citation_count": {"value": 541, "date": "2025-02-08 03:44:42"},
+                },
+            },
+            7: {
+                "from_paper": {
+                    "title": "Webgpt: Browser-assisted question-answering with human feedback",
+                    "authors": "Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, et al.",
+                    "source": "arXiv preprint arXiv:2112.09332 (2021)",
+                    "year": 2021,
+                },
+                "from_scholary": {
+                    "title": "Webgpt: Browser-assisted question-answering with human feedback",
+                    "authors": "R Nakano, J Hilton, S Balaji, J Wu, L Ouyang",
+                    "citation_count": {"value": 1119, "date": "2025-02-08 03:44:47"},
+                },
+            },
+            8: {
+                "from_paper": {
+                    "title": "GPT-in-the-Loop: Adaptive Decision-Making for Multiagent Systems",
+                    "authors": "Nathalia Nascimento, Paulo Alencar, and Donald Cowan",
+                    "source": "arXiv preprint arXiv:2308.10435 (2023)",
+                    "year": 2023,
+                },
+                "from_request": {
+                    "title": "Gpt-in-the-loop: Adaptive decision-making for multiagent systems",
+                    "authors": "N Nascimento, P Alencar, D Cowan",
+                    "citation_count": {"value": 11, "date": "2025-02-08 03:44:54"},
+                },
+            },
+            9: {
+                "from_paper": {
+                    "title": "GPT-4 Technical Report",
+                    "authors": "OpenAI",
+                    "source": "arXiv preprint arXiv:2303.08774 (2023)",
+                    "year": 2023,
+                },
+                "from_scholary": {
+                    "title": "Gpt-4 technical report",
+                    "authors": "J Achiam, S Adler, S Agarwal, L Ahmad",
+                    "citation_count": {"value": 7777, "date": "2025-02-08 03:44:57"},
+                },
+            },
+            10: {
+                "from_paper": {
+                    "title": "Hugginggpt: Solving ai tasks with chatgpt and its friends in huggingface",
+                    "authors": "Yongliang Shen, Kaitao Song, Xu Tan, Dongsheng Li, Weiming Lu, and Yueting Zhuang",
+                    "source": "arXiv preprint arXiv:2303.17580 (2023)",
+                    "year": 2023,
+                },
+                "from_scholary": {
+                    "title": "Hugginggpt: Solving ai tasks with chatgpt and its friends in hugging face",
+                    "authors": "Y Shen, K Song, X Tan, D Li, W Lu",
+                    "citation_count": {"value": 1042, "date": "2025-02-08 03:44:59"},
+                },
+            },
+            11: {
+                "from_paper": {
+                    "title": "RAH! RecSys-Assistant-Human: A Human-Central Recommendation Framework with Large Language Models",
+                    "authors": "Yubo Shu, Hansu Gu, Peng Zhang, Haonan Zhang, Tun Lu, Dongsheng Li, and Ning Gu",
+                    "source": "arXiv preprint arXiv:2308.09904 (2023)",
+                    "year": 2023,
+                },
+                "from_request": {
+                    "title": "Rah! recsys-assistant-human: A human-central recommendation framework with large language models",
+                    "authors": "Y Shu, H Gu, P Zhang, H Zhang, T Lu, D Li",
+                    "citation_count": {"value": 19, "date": "2025-02-08 03:45:05"},
+                },
+            },
+            12: {
+                "from_paper": {
+                    "title": "Multiagent systems: A survey from a machine learning perspective",
+                    "authors": "Peter Stone and Manuela Veloso",
+                    "source": "Autonomous Robots 8 (2000), 345–383",
+                    "year": 2000,
+                },
+                "from_request": {
+                    "title": "Multiagent systems: A survey from a machine learning perspective",
+                    "authors": "P Stone, M Veloso",
+                    "citation_count": {"value": 2066, "date": "2025-02-08 03:45:12"},
+                },
+            },
+            13: {
+                "from_paper": {
+                    "title": "Collaborative-Enhanced Prediction of Spending on Newly Downloaded Mobile Games under Consumption Uncertainty",
+                    "authors": "Peijie Sun, Yifan Wang, Min Zhang, Chuhan Wu, Yan Fang, Hong Zhu, Yuan Fang, and Meng Wang",
+                    "source": "WWW2024, Industry Track (2024)",
+                    "year": 2024,
+                },
+                "from_request": {
+                    "title": "Collaborative-Enhanced Prediction of Spending on Newly Downloaded Mobile Games under Consumption Uncertainty",
+                    "authors": "P Sun, Y Wang, M Zhang, C Wu, Y Fang, H Zhu, Y Fang, M Wang",
+                    "citation_count": {"value": 9, "date": "2025-02-08 03:45:19"},
+                },
+            },
+            14: {
+                "from_paper": {
+                    "title": "Neighborhood-Enhanced Supervised Contrastive Learning for Collaborative Filtering",
+                    "authors": "Peijie Sun, Le Wu, Kun Zhang, Xiangzhi Chen, and Meng Wang",
+                    "source": "IEEE Transactions on Knowledge and Data Engineering (2023)",
+                    "year": 2023,
+                },
+                "from_request": {
+                    "title": "Neighborhood-Enhanced Supervised Contrastive Learning for Collaborative Filtering",
+                    "authors": "P Sun, L Wu, K Zhang, X Chen, M Wang",
+                    "citation_count": {"value": 24, "date": "2025-02-08 03:45:25"},
+                },
+            },
+            15: {
+                "from_paper": {
+                    "title": "Llama: Open and efficient foundation language models",
+                    "authors": "Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al.",
+                    "source": "arXiv preprint arXiv:2302.13971 (2023)",
+                    "year": 2023,
+                },
+                "from_scholary": {
+                    "title": "Llama: Open and efficient foundation language models",
+                    "authors": "H Touvron, T Lavril, G Izacard, X Martinet",
+                    "citation_count": {"value": 12522, "date": "2025-02-08 03:45:28"},
                 },
             },
         }
@@ -455,7 +598,9 @@ def reference_parse(request):
 
             if (
                 "from_scholarly" in one_ref_info
-                and one_ref_info["from_scholarly"].get("citation_count", {}).get("value")
+                and one_ref_info["from_scholarly"]
+                .get("citation_count", {})
+                .get("value")
                 is not None
             ) or (
                 "from_request" in one_ref_info
